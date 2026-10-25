@@ -13,5 +13,9 @@ declare namespace Cloudflare {
     SEARCH_CONSOLE?: string;
     /** Google service-account JSON for read-only Search Console. Worker secret on handoff only. Never send to the browser. */
     GOOGLE_SA_KEY_JSON?: string;
+    /** handoff-search D1 (Search Console facts). Migrations in migrations-search/, applied by migrateSearch(). */
+    SEARCH_DB?: D1Database;
+    /** Producer for the search-sync queue. The consumer runs on the handoff Worker only. */
+    SEARCH_SYNC?: Queue;
   }
 }

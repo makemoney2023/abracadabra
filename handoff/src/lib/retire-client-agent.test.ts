@@ -113,7 +113,9 @@ describe("AGENT_WAKES", () => {
     expect(await dueOrganizations(sql, "0 8 * * 1", NOW)).toEqual([]);
     const raw = readFileSync(new URL("../../wrangler.jsonc", import.meta.url), "utf8");
     const crons = JSON.parse(raw.match(/"crons":\s*(\[[^\]]*\])/)![1]) as string[];
-    expect(crons).toEqual(["* * * * *", "0 * * * *"]);
+    // The daily Search Console cron (30 8 * * *) only enqueues sync work; scheduled() never wakes agents on it.
+    expect(crons).toEqual(["* * * * *", "0 * * * *", "30 8 * * *"]);
+    expect(crons.some((cron) => cron.endsWith(" 1"))).toBe(false);
   });
 
   it("a manual lead with wakes off logs no wake failure", async () => {

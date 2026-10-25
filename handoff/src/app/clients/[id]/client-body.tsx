@@ -27,6 +27,7 @@ import { ThreadsTab } from "./threads-tab";
 import { WorkTab } from "./work-tab";
 import type { ClientTabId } from "./tabs";
 import type { AccessCheck, SearchProperty } from "@/lib/search/properties";
+import type { SyncRunSummary } from "@/lib/search/sync-status";
 import type { StaffLibrarySummaryModel } from "@/components/library/staff-library-summary";
 
 export function ClientBody({
@@ -61,6 +62,7 @@ export function ClientBody({
   searchConsoleResource,
   searchProperties = [],
   searchAccess = null,
+  searchRuns = {},
   agentWork,
   internal = false,
   updateMode = "draft",
@@ -98,6 +100,7 @@ export function ClientBody({
   searchConsoleResource: string;
   searchProperties?: SearchProperty[];
   searchAccess?: AccessCheck | null;
+  searchRuns?: Record<string, SyncRunSummary>;
   /** Hidden from Today as internal, test, or vendor. */
   internal?: boolean;
   /** Client updates on approved agent work: draft (default) or auto. */
@@ -151,6 +154,7 @@ export function ClientBody({
         updateMode={updateMode}
         searchProperties={searchProperties}
         searchAccess={searchAccess}
+        searchRuns={searchRuns}
       />
     );
   }

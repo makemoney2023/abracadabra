@@ -232,6 +232,41 @@ describe("Search Console client", () => {
   });
 });
 
+describe("Search Console client throttle hook", () => {
+  it("asks the throttle before every HTTP attempt, including retries and extra pages", async () => {
+    const { fetchImpl, calls } = scripted([
+      json({}, 503),
+      json({ rows: rows(SEARCH_ANALYTICS_PAGE_SIZE) }),
+      json({ rows: rows(2) }),
+    ]);
+    let permits = 0;
+    const gsc = createGscClient({
+      tokens: fakeTokens().provider,
+      fetchImpl,
+      sleep: async () => {},
+      beforeRequest: async () => {
+        permits += 1;
+      },
+    });
+    await gsc.querySearchAnalytics("sc-domain:a.com", { startDate: "2026-10-20", endDate: "2026-10-20", dimensions: ["date", "query"] });
+    expect(calls).toHaveLength(3);
+    expect(permits).toBe(3);
+  });
+
+  it("makes no request when the throttle refuses", async () => {
+    const { fetchImpl, calls } = scripted([json({ siteEntry: [] })]);
+    const gsc = createGscClient({
+      tokens: fakeTokens().provider,
+      fetchImpl,
+      beforeRequest: async () => {
+        throw new SearchApiError("rate_limited", 429, "hq_throttle", 30_000);
+      },
+    });
+    await expect(gsc.listSites()).rejects.toMatchObject({ kind: "rate_limited", code: "hq_throttle" });
+    expect(calls).toHaveLength(0);
+  });
+});
+
 describe("retryAfterMs", () => {
   it("reads seconds and HTTP dates, caps at a minute, and ignores junk", () => {
     expect(retryAfterMs("3")).toBe(3000);

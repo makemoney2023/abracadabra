@@ -19,6 +19,8 @@ export type SearchProperty = {
   permission_level: string | null;
   inspect_budget: number;
   loop_enabled: number;
+  backfill_state: "none" | "running" | "done" | "failed";
+  data_through: string | null;
   last_checked_at: number | null;
   last_success_at: number | null;
   last_error: string | null;
@@ -28,7 +30,7 @@ export type SearchProperty = {
 };
 
 const COLUMNS =
-  "id, organization_id, provider, site_url, status, permission_level, inspect_budget, loop_enabled, last_checked_at, last_success_at, last_error, mapped_by, created_at, updated_at";
+  "id, organization_id, provider, site_url, status, permission_level, inspect_budget, loop_enabled, backfill_state, data_through, last_checked_at, last_success_at, last_error, mapped_by, created_at, updated_at";
 
 /** Google returns this level for a property the account cannot actually read. */
 const UNUSABLE_LEVELS = new Set(["siteUnverifiedUser"]);
@@ -93,7 +95,7 @@ export async function mapSearchProperty(
                   VALUES (?, ?, 'gsc', ?, 'pending', ?, ?, ?)`,
       params: [id, input.organizationId, siteUrl, caller.userId, input.now, input.now],
     },
-    activity(input.organizationId, "search.property_mapped", "staff", caller.userId, `Mapped Search Console property ${siteUrl}.`, { property_id: id, site_url: siteUrl }, input.now),
+    searchActivity(input.organizationId, "search.property_mapped", "staff", caller.userId, `Mapped Search Console property ${siteUrl}.`, { property_id: id, site_url: siteUrl }, input.now),
   ]);
   const property = await sql.get<SearchProperty>(`SELECT ${COLUMNS} FROM search_properties WHERE id = ?`, [id]);
   return property ? { ok: true, property } : { ok: false, error: "missing" };
@@ -116,12 +118,17 @@ export async function removeSearchProperty(
       statement: "UPDATE search_properties SET status = 'removed', updated_at = ? WHERE id = ?",
       params: [input.now, input.propertyId],
     },
-    activity(input.organizationId, "search.property_unmapped", "staff", caller.userId, `Removed Search Console property ${row.site_url}.`, { property_id: input.propertyId, site_url: row.site_url }, input.now),
+    searchActivity(input.organizationId, "search.property_unmapped", "staff", caller.userId, `Removed Search Console property ${row.site_url}.`, { property_id: input.propertyId, site_url: row.site_url }, input.now),
   ]);
   return { ok: true };
 }
 
 // ---------- Access check (handoff Worker cron) ----------
+
+/** Google returns siteUnverifiedUser for a property the account cannot actually read. */
+export function readableSites(sites: SiteEntry[]): Map<string, string> {
+  return new Map(sites.filter((site) => !UNUSABLE_LEVELS.has(site.permissionLevel)).map((site) => [site.siteUrl, site.permissionLevel]));
+}
 
 export const ACCESS_SETTING_KEY = "search_console_access";
 
@@ -195,7 +202,7 @@ export async function refreshSearchAccess(input: {
     );
     return check;
   }
-  const visible = new Map(sites.filter((site) => !UNUSABLE_LEVELS.has(site.permissionLevel)).map((site) => [site.siteUrl, site.permissionLevel]));
+  const visible = readableSites(sites);
   const mapped = await sql.all<{ id: string; organization_id: string; site_url: string; status: SearchPropertyStatus }>(
     "SELECT id, organization_id, site_url, status FROM search_properties WHERE provider = 'gsc' AND status IN ('pending', 'active', 'access_lost')",
   );
@@ -214,7 +221,7 @@ export async function refreshSearchAccess(input: {
         const body = property.status === "access_lost"
           ? `Search Console access is back for ${property.site_url}.`
           : `HQ can read Search Console property ${property.site_url}.`;
-        statements.push(activity(property.organization_id, kind, "system", null, body, { property_id: property.id, site_url: property.site_url, permission_level: level }, now));
+        statements.push(searchActivity(property.organization_id, kind, "system", null, body, { property_id: property.id, site_url: property.site_url, permission_level: level }, now));
       }
       await sql.batch(statements);
     } else if (property.status === "active") {
@@ -224,7 +231,7 @@ export async function refreshSearchAccess(input: {
                       last_error = 'not_shared', updated_at = ? WHERE id = ?`,
           params: [now, now, property.id],
         },
-        activity(
+        searchActivity(
           property.organization_id,
           "search.access_lost",
           "system",
@@ -262,7 +269,8 @@ export async function runSearchAccessCron(input: {
   }
 }
 
-function activity(
+/** An org-scoped activities row (the audit trail for search). */
+export function searchActivity(
   organizationId: string,
   kind: string,
   actorKind: "staff" | "system",

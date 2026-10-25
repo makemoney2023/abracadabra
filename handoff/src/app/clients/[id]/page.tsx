@@ -31,6 +31,7 @@ import { presentSchemaLead } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
 import { connectorGrant } from "@/lib/connector-grants";
 import { listSearchProperties, readAccessCheck } from "@/lib/search/properties";
+import { recentSyncRuns } from "@/lib/search/sync-status";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
@@ -299,6 +300,7 @@ export default async function ClientPage({
           searchConsoleResource={await connectorGrant(sql, client.id, "search-console")}
           searchProperties={tab === "settings" ? await listSearchProperties(sql, client.id) : []}
           searchAccess={tab === "settings" ? await readAccessCheck(sql) : null}
+          searchRuns={tab === "settings" ? await recentSyncRuns(sql, client.id) : {}}
           internal={tab === "settings" ? await organizationInternal(sql, caller, client.id) : false}
           updateMode={tab === "settings" ? await organizationUpdateMode(sql, caller, client.id) : "draft"}
           agentWork={agentWork}

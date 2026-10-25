@@ -44,4 +44,45 @@ describe("dispatchQueue", () => {
     );
     expect(seen).toEqual(["assessment"]);
   });
+
+  it("sends search-sync to the search handler and never to lead intake", async () => {
+    const seen: unknown[] = [];
+    await dispatchQueue(
+      {
+        queue: "search-sync",
+        messages: [{ body: { v: 1, kind: "plan", propertyId: "p1", mode: "daily" }, ack() {}, retry() {} }],
+      },
+      { DB: db },
+      {
+        search: async (messages) => {
+          seen.push(messages[0]?.body);
+        },
+        github: async () => {
+          throw new Error("github handler should not run");
+        },
+        lead: async () => {
+          throw new Error("lead handler should not run");
+        },
+      },
+    );
+    expect(seen).toEqual([{ v: 1, kind: "plan", propertyId: "p1", mode: "daily" }]);
+  });
+
+  it("keeps a search-sync message away from lead intake even with no search handler injected (fails closed: acked)", async () => {
+    const outcomes: string[] = [];
+    await dispatchQueue(
+      {
+        queue: "search-sync",
+        messages: [{ body: { v: 1, kind: "plan", propertyId: "p1", mode: "daily" }, ack: () => outcomes.push("ack"), retry: () => outcomes.push("retry") }],
+      },
+      { DB: db },
+      {
+        lead: async () => {
+          throw new Error("lead handler should not run");
+        },
+      },
+    );
+    // SEARCH_CONSOLE is off in this env, so the real consumer acknowledges without calling Google.
+    expect(outcomes).toEqual(["ack"]);
+  });
 });
