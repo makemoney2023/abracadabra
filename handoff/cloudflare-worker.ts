@@ -7,6 +7,7 @@ import { filePendingScanContexts } from "./src/lib/scan-context";
 import { settleRunningSwarms } from "./src/lib/client-workflows";
 import { dispatchQueue } from "./src/lib/queue-dispatch";
 import { refreshDueSocialPosts } from "./src/lib/social";
+import { runSearchAccessCron } from "./src/lib/search/properties";
 import { r2ObjectStore, type FilesBucket } from "./src/lib/store/objects";
 import { createZernioClient } from "./src/lib/zernio";
 
@@ -17,6 +18,9 @@ type QueueEnv = WakeEnv & {
   EMAIL?: { send(message: unknown): Promise<unknown> };
   SWARM_ORIGIN?: string;
   ZERNIO_API_KEY?: string;
+  /** Search Console data in HQ: "on" to run. GOOGLE_SA_KEY_JSON is a Worker secret on handoff only. */
+  SEARCH_CONSOLE?: string;
+  GOOGLE_SA_KEY_JSON?: string;
 };
 
 export default {
@@ -58,6 +62,8 @@ export default {
         console.error(error instanceof Error ? error.message : "Social post refresh failed.");
       }
     }
+    // Hourly: can HQ's Google service account still read each mapped property? Off or no key: no Google call.
+    await runSearchAccessCron({ sql, env, cron: event.cron, now });
     await wakeDueAgents(sql, env, event.cron, now);
     const deps = defaultBuildDeps(now);
     await expireCloudRuns(sql, deps);
