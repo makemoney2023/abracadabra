@@ -118,12 +118,12 @@ export const SCORE_PREVIEW_COPY = {
 export const META_COPY = {
   title: "Schema — AI visibility for your website",
   description:
-    "See whether answer engines can confidently read your site: structured data, discovery files, and page coverage, page by page, with a report and PDF.",
+    "See whether answer engines can confidently read your site. Score your structured data, discovery files, and page coverage — unlock the full report and PDF.",
 } as const;
 
-/** Metadata for the Readiness Check pages, including a visitor's results (/check/[token]). Matches the stage view: no "free", no score or band. */
+/** Metadata for the Readiness Check pages, including a visitor's results (/check/[token]). Matches the results view: scores, stage and next steps; never "free", never a fixed tip count. */
 export const READINESS_META_COPY = {
   title: "Your Readiness Check",
   description:
-    "A five-to-seven-minute check that gives your business a stage name and next steps for where it is today, plus a thirty-minute working session if you want one.",
+    "A five-to-seven-minute check that gives your business scores, a stage name, and next steps for where it is today, plus a thirty-minute working session if you want one.",
 } as const;
