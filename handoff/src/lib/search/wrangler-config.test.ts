@@ -30,6 +30,9 @@ describe("Search Console sync bindings", () => {
       expect(search).toMatchObject({ database_name: "handoff-search", migrations_dir: "migrations-search" });
       expect(config.d1_databases.find((db) => db.binding === "DB")).toMatchObject({ database_name: "handoff", migrations_dir: "migrations" });
     }
+    // The real handoff-search database (created 2026-10-24 with Christopher's approval), the same on both Workers.
+    const ids = [handoff, hq].map((config) => config.d1_databases.find((db) => db.binding === "SEARCH_DB")?.database_id);
+    expect(ids).toEqual(["1cb2d972-e9f2-4472-b017-b56addb49766", "1cb2d972-e9f2-4472-b017-b56addb49766"]);
   });
 
   it("produces to search-sync from both Workers and consumes only on handoff, with a dead-letter queue", () => {

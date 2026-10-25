@@ -46,7 +46,7 @@
     {
       "binding": "SEARCH_DB",
       "database_name": "handoff-search",
-      "database_id": "TODO-create-handoff-search-then-paste-its-database_id",
+      "database_id": "1cb2d972-e9f2-4472-b017-b56addb49766",
       "migrations_dir": "migrations-search"
     }
   ],
