@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
 import { libraryEligibleSql } from "./project-library";
+import { agentApprovedItemIds } from "./social-approvals";
 import type { Caller } from "./authz";
 import { commandAuthorized, readCommandGate } from "./social-commands";
 import { sendPiece, zonedTimeToUtc } from "./social";
@@ -197,9 +198,27 @@ export function nextSlots(settings: Autopost, taken: number[], now: number, coun
   return slots;
 }
 
+export type AutoScheduleResult = {
+  scheduled: number;
+  /** One line per piece Cadence tried to place and could not. */
+  failed: string[];
+  /** One line per approved piece that was left alone on purpose: no posting time, no connected account, or an agent approved it. */
+  skipped: string[];
+};
+
 /**
- * Runs after a client approves pieces. When the client has auto-schedule on, each approved piece that has not gone
- * to those accounts yet is scheduled into the next free slot, as its own post type.
+ * Runs after a client or staff member approves pieces (one piece, the whole deliverable, or a bulk Library approve).
+ * Each piece in `itemIds` that is approved, not removed and has no live post yet is scheduled into the next free
+ * Cadence slot, on the client's connected Cadence accounts, with its approved copy (sendPiece reads it). `itemIds: null`
+ * means every approved piece of the deliverable; callers pass the pieces they just approved instead, so nothing that was
+ * approved earlier is swept up.
+ *
+ * Nothing here ever fails the approval. A piece is skipped, with a plain reason, when:
+ *   - Cadence is off for the client (there is no planned posting time),
+ *   - no picked Cadence account is still connected,
+ *   - an agent approved it (#212). Scheduling an agent-approved piece is a separate plan step, never a side effect.
+ * A piece that already has a sending, scheduled, published or partial post is never scheduled twice.
+ * Only client-approved finished work is ever considered (status 'approved' on the published version).
  */
 export async function autoScheduleApproved(
   sql: Sql,
@@ -207,17 +226,16 @@ export async function autoScheduleApproved(
   store: ObjectStore,
   input: { deliverableId: string; itemIds: string[] | null },
   now: number,
-): Promise<{ scheduled: number; failed: string[] }> {
+): Promise<AutoScheduleResult> {
+  const result: AutoScheduleResult = { scheduled: 0, failed: [], skipped: [] };
+  if (input.itemIds && input.itemIds.length === 0) return result;
   const deliverable = await sql.get<{ organization_id: string; published_version: number | null; kind: string }>(
     "SELECT organization_id, published_version, kind FROM deliverables WHERE id = ?",
     [input.deliverableId],
   );
-  const result = { scheduled: 0, failed: [] as string[] };
   if (!deliverable || deliverable.published_version == null || deliverable.kind === "brief" || deliverable.kind === "design_system") {
     return result;
   }
-  const settings = await getAutopost(sql, deliverable.organization_id);
-  if (!settings.enabled || settings.accountIds.length === 0) return result;
   // A project that opted out of the Library (print, for example) is not social work: never auto-post it.
   const eligible = await sql.get<{ id: string }>(
     `SELECT d.id FROM deliverables d WHERE d.id = ? AND ${libraryEligibleSql("d.project_id", "d.workspace_id")}`,
@@ -236,8 +254,35 @@ export async function autoScheduleApproved(
     [input.deliverableId, deliverable.published_version],
   );
   const wanted = input.itemIds ? new Set(input.itemIds) : null;
-  const pieces = approved.filter((row) => !wanted || wanted.has(row.id));
+  const byAgent = await agentApprovedItemIds(sql, input.deliverableId, deliverable.published_version);
+  const pieces: { id: string; title: string }[] = [];
+  for (const row of approved) {
+    if (wanted && !wanted.has(row.id)) continue;
+    if (byAgent.has(row.id)) {
+      result.skipped.push(`"${row.title}": an agent approved it, so it was not scheduled here. Schedule it from Social or with a plan.`);
+      continue;
+    }
+    pieces.push(row);
+  }
   if (pieces.length === 0) return result;
+  const settings = await getAutopost(sql, deliverable.organization_id);
+  if (!settings.enabled || settings.weekdays.length === 0 || settings.times.length === 0) {
+    for (const piece of pieces) result.skipped.push(`"${piece.title}": not scheduled. Cadence is off for this client, so it has no posting time.`);
+    return result;
+  }
+  const connected = settings.accountIds.length
+    ? (
+        await sql.all<{ id: string }>(
+          `SELECT id FROM social_accounts WHERE organization_id = ? AND is_active = 1 AND id IN (${settings.accountIds.map(() => "?").join(", ")})`,
+          [deliverable.organization_id, ...settings.accountIds],
+        )
+      ).map((row) => row.id)
+    : [];
+  const accountIds = settings.accountIds.filter((id) => connected.includes(id));
+  if (accountIds.length === 0) {
+    for (const piece of pieces) result.skipped.push(`"${piece.title}": not scheduled. No connected account is picked for Cadence.`);
+    return result;
+  }
   const taken = (
     await sql.all<{ scheduled_for: number }>(
       `SELECT scheduled_for FROM social_posts WHERE organization_id = ? AND status = 'scheduled' AND scheduled_for > ?`,
@@ -259,7 +304,7 @@ export async function autoScheduleApproved(
       {
         deliverableId: input.deliverableId,
         itemId: piece.id,
-        accountIds: settings.accountIds,
+        accountIds,
         mode: "scheduled",
         postType: null,
         scheduledFor: at,

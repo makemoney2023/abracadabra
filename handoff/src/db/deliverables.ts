@@ -457,7 +457,7 @@ export async function recordFeedback(
   caller: Caller,
   input: { deliverableId: string; itemId: string | null; version: number; decision: FeedbackDecision; body: string },
   now: number,
-): Promise<DeliverableResult<{ id: string; feedbackId: string }>> {
+): Promise<DeliverableResult<{ id: string; feedbackId: string; approvedItemIds: string[] }>> {
   const row = await loadRow(sql, input.deliverableId);
   if (!row || !(await seesSpace(sql, caller, row.workspace_id)) || !caller.userId) {
     return { ok: false, error: "missing" };
@@ -527,7 +527,13 @@ export async function recordFeedback(
   }
   writes.push(activity(row, "deliverable_feedback", actorKind, caller.userId, body || "Approved.", now));
   await writeAll(sql, writes);
-  return { ok: true, value: { id: row.id, feedbackId } };
+  // Only the pieces this call moved to approved. A piece that was already approved (by an agent, another person or an
+  // earlier round) is not in the list, so callers never re-schedule or take over an earlier approval.
+  const approvedItemIds =
+    input.decision === "approve"
+      ? items.flatMap((item, index) => (item.status !== "approved" && next[index] === "approved" ? [item.id] : []))
+      : [];
+  return { ok: true, value: { id: row.id, feedbackId, approvedItemIds } };
 }
 
 export async function visibleMedia(

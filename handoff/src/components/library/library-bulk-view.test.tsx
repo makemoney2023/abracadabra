@@ -76,7 +76,7 @@ describe("library bulk view", () => {
       ],
     };
     const html = renderToStaticMarkup(<BulkResultNote result={result} onDismiss={() => undefined} />);
-    expect(html).toContain("Approved 1, skipped 1, 1 failed, 1 placed on the calendar.");
+    expect(html).toContain("Approved 1, skipped 1, 1 failed, 1 placed on the calendar, 1 not scheduled.");
     expect(html).toContain("Beta");
     expect(html).toContain("Skipped: Already approved.");
     expect(html).toContain("Failed: Could not be approved.");

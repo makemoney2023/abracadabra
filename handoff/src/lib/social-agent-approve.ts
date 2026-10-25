@@ -197,7 +197,7 @@ export async function agentSetSocialItemApproval(
   const autopost = await getAutopost(sql, resolved.organizationId);
   if (decision === "approve" && autopost.enabled) {
     warnings.push(
-      "Auto-post is on for this client. This approval did not schedule anything, but a later whole-deliverable approval by staff or the client would place every approved piece of the deliverable in the next open slot.",
+      "Auto-post is on for this client. This approval did not schedule anything, and a later whole-deliverable or bulk approval by staff or the client will not schedule it either. Prepare a schedule plan next (POST /api/agent-social/plans).",
     );
   }
   return view(true, target, row.d_version === row.published_version ? nextDeliverable : row.d_status, warnings);
