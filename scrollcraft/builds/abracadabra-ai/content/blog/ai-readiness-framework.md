@@ -61,7 +61,7 @@ The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) is 
 
 ## What the check adds
 
-The Readiness Check asks about the same four groups.[^check] It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
+The Readiness Check asks about the same four groups.[^check] It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
 
 Read the result as a shape and not as a medal. Sometimes the work that matters still lives in people's heads. Sometimes some of it is written down, but nobody clearly owns it. Sometimes you could put a system on the job without making up the job at the same time. And sometimes the tools already do real work, and the leftover pain is the task everyone still hands to one person. A result without those sentences is just a label. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
 

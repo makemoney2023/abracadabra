@@ -28,7 +28,7 @@ faqs:
   - question: Is the Cisco index a small-business score?
     answer: No, because the 2025 index surveyed senior leaders at companies with more than 500 employees. It is a useful comparison for large firms, but it is the wrong group for a small business.
   - question: What does the Readiness Check give you?
-    answer: It gives you next steps for your business. It takes five to seven minutes, points to where to look next, and does not diagnose.
+    answer: It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. It takes five to seven minutes, points to where to look next, and does not diagnose.
 citations:
   - id: cisco
     title: "Cisco AI research: the most AI-ready companies"
@@ -95,7 +95,7 @@ We draw that line on purpose. A diagnosis says what is wrong with you. A route s
 
 ## What the check gives you
 
-The Readiness Check asks about the same four parts as this note.[^check] It gives you next steps for your business. The step depends on where the work stands today.
+The Readiness Check asks about the same four parts as this note.[^check] It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. The step depends on where the work stands today.
 
 - If the work that matters still lives in people's heads, the first useful step is to write one job down and name who owns it.
 - If parts of the work are written down, a named owner and one place for the facts can turn that into something a team can run.
@@ -104,7 +104,7 @@ The Readiness Check asks about the same four parts as this note.[^check] It give
 
 <!--image:3-->
 
-A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
+A next step tells you where to look today. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
 
 When the know-how is still in people's heads, you write one job down and name the owner before you shop. When the writing is only partial, two pieces are often missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 

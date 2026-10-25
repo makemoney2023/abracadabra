@@ -8,12 +8,14 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 export const READINESS_NEXT_STEPS = "It gives you next steps for your business.";
+/** What the check shows since #227. Goes right before READINESS_NEXT_STEPS. */
+export const READINESS_SCORES = "It scores readiness, growth and website visibility, and names the stage your business is at.";
 
 const NAMES_CHECK = /\breadiness check\b|check\.abra-ca-dabra\.app/i;
 const THE_CHECK = /\b(?:the|our) check(?:'s)?\b/i;
 const CARRIES_ON = /^(?:It|Its|You|They|This|That|Then|The (?:check|band|bands|score|scores|report|results?))\b/;
 const SCORE_WORDS = /\b(?:scor(?:e|es|ed|ing)|scorecards?|bands?|four scores|out of 100|0 to 100|0–100)\b|\b(?:Early|Forming|Running)\b/;
-const FREE_WORDS = /\bfree\b|\bno[- ]cost\b|\bat no charge\b|\bfree of charge\b/i;
+const FREE_WORDS = /\bfree\b|\bno[- ]cost\b|\bat no charge\b|\bfree of charge\b|\bcosts? nothing\b|\bcomplimentary\b|\bwithout charge\b/i;
 // "free" that is not about price.
 const FREE_OK = /\b(?:free[- ]text|free[- ]form|hands[- ]free|error[- ]free|overflow[- ]free|feel free)\b/gi;
 

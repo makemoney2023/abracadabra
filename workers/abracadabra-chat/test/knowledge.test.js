@@ -102,6 +102,15 @@ test("knowledge, glossary entries and the system prompt never give the Readiness
   assert.notDeepEqual(findReadinessCountClaims("The Readiness Check gives three suggestions in each section."), []);
 });
 
+test("knowledge says the Readiness Check gives scores, a stage and next steps, and never calls it free", async () => {
+  const { findReadinessFreeClaims } = await import(new URL("scripts/readiness-copy.mjs", site));
+  assert.match(SITE_KNOWLEDGE, /It scores readiness, growth and website visibility, names the stage the business is at, and gives next steps/);
+  assert.deepEqual(findReadinessFreeClaims(SITE_KNOWLEDGE), []);
+  assert.deepEqual(findReadinessFreeClaims(SITE_GLOSSARY.map((entry) => entry.short).join("\n")), []);
+  // The system prompt names "free" only in its rule never to say it, so it is checked as knowledge, not as a whole.
+  assert.notDeepEqual(findReadinessFreeClaims("The Readiness Check is free."), []);
+});
+
 test("every case study name in the knowledge appears in the site source", async () => {
   const source = await readFile(new URL("scripts/site-data.mjs", site), "utf8");
   for (const item of SITE_WORK) assert.ok(source.includes(item.name), item.name);

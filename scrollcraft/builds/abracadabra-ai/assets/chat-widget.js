@@ -1224,7 +1224,7 @@ export class AbraChat extends ElementBase {
     card.append(
       el("p", "kicker", "Five to seven minutes"),
       el("h3", null, "Take the AI Readiness Check."),
-      el("p", null, "Answer here in the chat, one question at a time. It gives you next steps for your business."),
+      el("p", null, "Answer here in the chat, one question at a time. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business."),
     );
     const start = el("button", "primary", "Start it here");
     start.type = "button";
@@ -1408,7 +1408,7 @@ export class AbraChat extends ElementBase {
       el("h3", null, `${data.band?.label || "Finished"}.`),
     );
     if (data.band?.sentence) card.append(el("p", null, data.band.sentence));
-    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email. It gives you next steps for your business."));
+    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email, then shows your scores for readiness, growth and website visibility. It gives you next steps for your business."));
     const report = el("a", "primary", "See your next steps");
     report.href = data.reportUrl;
     report.target = "_blank";

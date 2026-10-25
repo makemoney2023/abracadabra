@@ -839,16 +839,16 @@
       "batch": 2,
       "order": 1,
       "question": "What is the Readiness Check?",
-      "description": "The Readiness Check is Abracadabra's five-to-seven-minute online check for a business that wants to use AI. It gives you next steps for your business.",
+      "description": "Abracadabra's five-to-seven-minute online check. It scores readiness, growth and website visibility. It gives you next steps for your business.",
       "category": "Abracadabra products",
       "priority": "High",
       "alternateName": [
         "Abracadabra Readiness Check"
       ],
-      "short": "The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.",
+      "short": "The Readiness Check is our online check for a business that wants to put AI to work. It takes five to seven minutes. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business.",
       "explainer": [
         "The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.",
-        "When you finish, you leave an email. It gives you next steps for your business. You can also book a thirty-minute working session if you want one."
+        "When you finish, you leave an email. Then you see your scores for readiness, growth and website visibility, and the stage your business is at. It gives you next steps for your business. You can also book a thirty-minute working session if you want one."
       ],
       "sections": [
         {
@@ -860,7 +860,7 @@
         {
           "q": "How is it different from an AI readiness assessment?",
           "a": [
-            "An AI readiness assessment is the general idea: a structured look at how ready a business is for AI. AWS describes one as a look at data, technology, processes and people. The Readiness Check is our own version. It also asks where new customers come from and reads your website. It gives you next steps for your business."
+            "An AI readiness assessment is the general idea: a structured look at how ready a business is for AI. AWS describes one as a look at data, technology, processes and people. The Readiness Check is our own version. It also asks where new customers come from and reads your website. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business."
           ]
         },
         {
@@ -881,7 +881,7 @@
         },
         {
           "question": "What happens after I finish the Readiness Check?",
-          "answer": "You leave an email. It gives you next steps for your business. You can also book a thirty-minute working session."
+          "answer": "You leave an email. Then you see your scores and the stage your business is at. It gives you next steps for your business. You can also book a thirty-minute working session."
         }
       ],
       "related": [
@@ -916,7 +916,7 @@
       "notMatch": [],
       "verified": "2026-10-25",
       "draft": "Abracadabra's five-to-seven-minute questionnaire. It scores data, process, people and the decision, gives a band and tips, and offers a thirty-minute working session.",
-      "changes": "Checked against the live check page. Client Services later asked that the site make no score promises, so the entry now says the check gives you next steps for your business, with no scores or bands. Kept the five-to-seven-minute length, the email step and the thirty-minute session. Never says the check costs nothing."
+      "changes": "Checked against the live check page. Client Services later asked that the site make no score promises; after the check showed its scores again (#227), the entry says it scores readiness, growth and website visibility, names the stage, and gives you next steps for your business. Kept the five-to-seven-minute length, the email step and the thirty-minute session. Never says the check costs nothing."
     },
     {
       "term": "AI citation",
@@ -1941,7 +1941,7 @@
       "category": "AI readiness and strategy",
       "priority": "Med",
       "clientFlag": null,
-      "draft": "The stage name the Readiness Check gives a business, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
+      "draft": "The stage name the Readiness Check gives a business, such as Early, Forming, Ready or Running, next to its scores. It describes where the business stands today, not a diagnosis.",
       "mentions": 9,
       "sources": [
         "/blog/ai-readiness-framework",

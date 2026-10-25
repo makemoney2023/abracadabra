@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { loadGlossary, publishedTerms } from "../scripts/glossary-data.mjs";
-import { READINESS_NEXT_STEPS, assertReadinessCopy, builtCopy, findReadinessCountClaims, findReadinessFreeClaims, pageCopy, widgetCopy } from "../scripts/readiness-copy.mjs";
+import { READINESS_NEXT_STEPS, READINESS_SCORES, assertReadinessCopy, builtCopy, findReadinessCountClaims, findReadinessFreeClaims, pageCopy, widgetCopy } from "../scripts/readiness-copy.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -15,6 +15,9 @@ test("the free rule catches the Readiness Check called free and passes other use
     "The Readiness Check is free and takes five to seven minutes.",
     "Take the Readiness Check. It is free.",
     "Our Readiness Check costs nothing: it is free of charge.",
+    "Take the Readiness Check. It's free and takes five minutes.",
+    "The Readiness Check costs nothing.",
+    "Our Readiness Check is complimentary.",
   ]) assert.notDeepEqual(findReadinessFreeClaims(bad), [], bad);
   for (const good of [
     `The Readiness Check takes five to seven minutes. ${READINESS_NEXT_STEPS}`,
@@ -28,6 +31,8 @@ test("score wording about the Readiness Check is allowed again (public scores si
   for (const ok of [
     "The Readiness Check gives a score for readiness, growth, and website visibility.",
     "Take the Readiness Check. You get your scores, your stage, and next steps for your business.",
+    `The Readiness Check takes five to seven minutes. ${READINESS_SCORES} ${READINESS_NEXT_STEPS}`,
+    "Then you see your scores and the stage your business is at.",
   ]) {
     assert.deepEqual(findReadinessFreeClaims(ok), [], ok);
     assert.deepEqual(findReadinessCountClaims(ok), [], ok);
@@ -59,28 +64,35 @@ test("the homepage FAQ answer about the Readiness Check uses Client Services' li
   const faq = JSON.parse([...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((j) => j.includes('"FAQPage"')));
   const nodes = faq["@graph"] ?? [faq];
   const answer = nodes.find((n) => n["@type"] === "FAQPage").mainEntity.find((q) => /ready to put AI to work/.test(q.name)).acceptedAnswer.text;
-  assert.ok(answer.includes(READINESS_NEXT_STEPS), answer);
+  assert.ok(answer.includes(`${READINESS_SCORES} ${READINESS_NEXT_STEPS}`), answer);
+  assert.ok(pageCopy(visible).includes(`${READINESS_SCORES} ${READINESS_NEXT_STEPS}`));
   assert.deepEqual(findReadinessFreeClaims(answer), []);
   assert.deepEqual(findReadinessCountClaims(answer), []);
 });
 
-test("the Readiness Check pages use Client Services' line", () => {
+test("the Readiness Check pages carry the scores line and Client Services' next-steps line", () => {
   const page = read("glossary/readiness-check/index.html");
-  assert.ok(pageCopy(page).includes(READINESS_NEXT_STEPS));
-  assert.match(page, new RegExp(`<meta name="description" content="[^"]*${READINESS_NEXT_STEPS}`));
+  for (const line of [READINESS_SCORES, READINESS_NEXT_STEPS]) assert.ok(pageCopy(page).includes(line), line);
+  // The meta description is capped at 160 characters, so it carries the short form of the scores line.
+  assert.match(page, new RegExp(`<meta name="description" content="[^"]*It scores readiness, growth and website visibility\\. ${READINESS_NEXT_STEPS}`));
   const ld = JSON.parse(page.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1])["@graph"];
-  assert.ok(ld.find((n) => n["@type"] === "DefinedTerm").description.includes(READINESS_NEXT_STEPS));
-  assert.ok(read("llms.txt").includes(READINESS_NEXT_STEPS));
+  const term = ld.find((n) => n["@type"] === "DefinedTerm").description;
+  assert.ok(term.includes(READINESS_SCORES) && term.includes(READINESS_NEXT_STEPS), term);
+  assert.ok(read("llms.txt").includes(`${READINESS_SCORES} ${READINESS_NEXT_STEPS}`));
   assert.ok(read("glossary/index.html").includes(READINESS_NEXT_STEPS));
 });
 
-test("the chat widget card and the chat's site knowledge promise next steps and never call the check free", () => {
+test("the chat widget cards and the chat's site knowledge mention the scores and next steps, never free", () => {
   const widget = read("assets/chat-widget.js");
   const intro = widget.match(/"Take the AI Readiness Check\."\),\s*el\("p", null, "([^"]+)"/)[1];
-  assert.ok(intro.includes(READINESS_NEXT_STEPS), intro);
+  assert.ok(intro.includes(READINESS_SCORES) && intro.includes(READINESS_NEXT_STEPS), intro);
   assert.deepEqual(findReadinessFreeClaims(intro), []);
+  const card = widget.match(/The full report opens on the check site\.[^"]*/)[0];
+  assert.match(card, /scores for readiness, growth and website visibility/);
+  assert.ok(card.includes(READINESS_NEXT_STEPS), card);
   const knowledge = readFileSync(join(root, "../../../workers/abracadabra-chat/src/site-knowledge.js"), "utf8").replace(/\\n/g, "\n");
   assert.deepEqual(findReadinessFreeClaims(knowledge), []);
+  assert.match(knowledge, /It scores readiness, growth and website visibility, names the stage/);
 });
 
 test("the count rule catches fixed tip counts and passes the approved line", () => {
