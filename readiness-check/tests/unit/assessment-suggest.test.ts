@@ -118,7 +118,7 @@ describe("presentation and scan link", () => {
       scan: null,
     });
     expect(gated.results).toBeUndefined();
-    expect(gated.preview?.band).toBe(scores.overall.band);
+    expect(gated.preview?.stage).toBe(scores.overall.band);
     expect(JSON.stringify(gated)).not.toContain("a@b.co");
 
     const open = selectAssessmentPayload({

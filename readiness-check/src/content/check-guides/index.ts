@@ -1,6 +1,6 @@
 export type CheckGuide = {
   slug: string;
-  kind: "section" | "band" | "fix";
+  kind: "section" | "stage" | "fix";
   title: string;
   answer: string;
   strong: string;
@@ -32,7 +32,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "slug": "readiness",
     "kind": "section",
     "title": "Could AI do real work here?",
-    "answer": "Readiness scores four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. A low score is a state, not a grade.",
+    "answer": "Readiness looks at four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. Where you are today is a state, not a grade.",
     "strong": "Strong looks like one system of record, a written workflow someone owns, a named day-to-day owner, and a decision inside the month.",
     "first": "Write the core workflow on one page before you buy or build anything.",
     "furtherReading": {
@@ -42,7 +42,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "faq": [
       {
         "q": "Could AI do real work here?",
-        "a": "Readiness scores four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. A low score is a state, not a grade."
+        "a": "Readiness looks at four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. Where you are today is a state, not a grade."
       }
     ]
   },
@@ -75,57 +75,57 @@ export const CHECK_GUIDES: CheckGuide[] = [
     ]
   },
   {
-    "slug": "band/early",
-    "kind": "band",
-    "title": "What does a Early readiness score mean?",
+    "slug": "stage/early",
+    "kind": "stage",
+    "title": "What does the Early stage mean?",
     "answer": "The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it.",
-    "strong": "The band describes the state of the business today. It is not a grade and it is not a diagnosis.",
-    "first": "Read the three suggestions under your lowest section and do the first one before you book anything.",
+    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
-        "q": "What does Early mean?",
+        "q": "What does the Early stage mean?",
         "a": "The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it."
       }
     ]
   },
   {
-    "slug": "band/forming",
-    "kind": "band",
-    "title": "What does a Forming readiness score mean?",
+    "slug": "stage/forming",
+    "kind": "stage",
+    "title": "What does the Forming stage mean?",
     "answer": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build.",
-    "strong": "The band describes the state of the business today. It is not a grade and it is not a diagnosis.",
-    "first": "Read the three suggestions under your lowest section and do the first one before you book anything.",
+    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
-        "q": "What does Forming mean?",
+        "q": "What does the Forming stage mean?",
         "a": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build."
       }
     ]
   },
   {
-    "slug": "band/ready",
-    "kind": "band",
-    "title": "What does a Ready readiness score mean?",
+    "slug": "stage/ready",
+    "kind": "stage",
+    "title": "What does the Ready stage mean?",
     "answer": "The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day.",
-    "strong": "The band describes the state of the business today. It is not a grade and it is not a diagnosis.",
-    "first": "Read the three suggestions under your lowest section and do the first one before you book anything.",
+    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
-        "q": "What does Ready mean?",
+        "q": "What does the Ready stage mean?",
         "a": "The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day."
       }
     ]
   },
   {
-    "slug": "band/running",
-    "kind": "band",
-    "title": "What does a Running readiness score mean?",
+    "slug": "stage/running",
+    "kind": "stage",
+    "title": "What does the Running stage mean?",
     "answer": "A real workflow already uses the tools. The next gain is the job that still waits on one person.",
-    "strong": "The band describes the state of the business today. It is not a grade and it is not a diagnosis.",
-    "first": "Read the three suggestions under your lowest section and do the first one before you book anything.",
+    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
-        "q": "What does Running mean?",
+        "q": "What does the Running stage mean?",
         "a": "A real workflow already uses the tools. The next gain is the job that still waits on one person."
       }
     ]
@@ -316,13 +316,13 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "slug": "fix/vis-unavailable",
     "kind": "fix",
     "title": "What should we do about the site scan did not finish?",
-    "answer": "We could not score the site this time. Run the scan directly and the visibility section will fill in.",
+    "answer": "We could not read the site this time. Run the scan directly and the visibility section will fill in.",
     "strong": "Strong looks like the suggestion no longer applies the next time you run the check.",
-    "first": "We could not score the site this time.",
+    "first": "We could not read the site this time.",
     "faq": [
       {
         "q": "Why does the site scan did not finish matter?",
-        "a": "We could not score the site this time. Run the scan directly and the visibility section will fill in."
+        "a": "We could not read the site this time. Run the scan directly and the visibility section will fill in."
       }
     ]
   },

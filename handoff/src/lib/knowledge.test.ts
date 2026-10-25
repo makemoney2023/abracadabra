@@ -613,7 +613,7 @@ describe("agent read tools", () => {
     const body = payload(context) as {
       organization: { name: string; briefApproval: string };
       deal: { title: string; wonAt: number };
-      assessment: { totalScore: number; answerSummary: string };
+      assessment: { totalScore: number; answerSummary: string; stageSummary: string };
       project: { milestones: { name: string }[]; description: string | null };
       projects: { id: string; description: string | null }[];
       workspaces: { slug: string; fileCounts: { clean: number } }[];
@@ -629,6 +629,8 @@ describe("agent read tools", () => {
     expect(body.assessment.totalScore).toBe(42);
     expect(body.assessment.answerSummary).toContain("42");
     expect(body.assessment.answerSummary).toContain("forming");
+    expect(body.assessment.answerSummary).toContain("Staff only: never quote these numbers to the client");
+    expect(body.assessment.stageSummary).toBe("Readiness Check stage: Forming.");
     expect(body.project.milestones[0]?.name).toBe("Launch");
     expect(body.project.description).toBe("Landing page and three ad sizes.");
     expect(body.projects.find((row) => row.id === "project-1")?.description).toBe(

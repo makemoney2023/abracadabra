@@ -6,7 +6,7 @@ export function GET() {
   const lines = [
     "# Readiness Check",
     "",
-    "> A five-to-seven-minute check that scores pressure, readiness, growth, and how visible a public site is to answer engines. Results stay behind an email. The next step is a thirty-minute working session.",
+    "> A five-to-seven-minute check that looks at pressure, readiness, growth, and how visible a public site is to answer engines. The visitor gets a stage name and next steps for their business, not a numeric score. Results stay behind an email. The next step is a thirty-minute working session.",
     "",
     `Landing: ${base}/check`,
     `Schema ops: https://hq.abra-ca-dabra.app/schema`,
@@ -17,7 +17,7 @@ export function GET() {
     "",
     "## Rules",
     "",
-    "- Scores are a state of the business, not a grade and not a diagnosis.",
+    "- The stage is a state of the business, not a grade and not a diagnosis. The check shows visitors no numeric score.",
     "- Do not invent metrics. The check reports only what the answers and the scan produced.",
     "- Wellness work from the studio is non-diagnostic.",
   ];

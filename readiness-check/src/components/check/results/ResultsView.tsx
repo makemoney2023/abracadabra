@@ -2,19 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PillarMeter } from "@/components/public/PillarMeter";
-import { ScoreRing } from "@/components/public/ScoreRing";
+import { Badge } from "@/components/ui/badge";
 import type { AssessmentPayload, ResultsPayload } from "@/lib/assessment/present";
-import type { ScoreBreakdown } from "@/lib/types";
 import { BookingCard } from "./BookingCard";
-
-const PILLARS: Array<{ key: keyof ScoreBreakdown; label: string; max: number; description: string }> = [
-  { key: "structuredData", label: "Structured data", max: 35, description: "JSON-LD the page actually publishes." },
-  { key: "aiDiscoveryFiles", label: "Discovery files", max: 20, description: "llms.txt, llms-full, and the sitemap." },
-  { key: "aiCrawlability", label: "AI crawl", max: 20, description: "Whether answer-engine crawlers are allowed in." },
-  { key: "pageCoverage", label: "Page coverage", max: 15, description: "How many key pages carry structured data." },
-  { key: "answerReadiness", label: "Answer readiness", max: 10, description: "Whether a page can answer a direct question." },
-];
 
 function SuggestionList({ items }: { items: ResultsPayload["suggestions"]["readiness"] }) {
   if (items.length === 0) return <p className="text-sm text-muted-foreground">Nothing to flag here.</p>;
@@ -44,7 +34,7 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
   }, [token]);
 
   useEffect(() => {
-    if (results.scores.visibility.status !== "pending") return;
+    if (results.visibility.status !== "pending") return;
     const started = Date.now();
     const timer = window.setInterval(async () => {
       if (Date.now() - started > 3 * 60 * 1000) {
@@ -57,62 +47,50 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
       if (data.results) setResults(data.results);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [results.scores.visibility.status, token]);
-
-  const { scores } = results;
-  const breakdown = scores.visibility.breakdown;
+  }, [results.visibility.status, token]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <header className="space-y-3">
         <p className="studio-kicker">Readiness Check</p>
-        <h1 className="font-heading text-5xl">{results.bandLabel}</h1>
+        <p className="text-sm text-muted-foreground">Where your business is today</p>
+        <h1 className="font-heading text-5xl" data-testid="stage-name">
+          {results.stage.label}
+        </h1>
         <p className="max-w-[46ch] text-lg text-muted-foreground">
-          {results.bandSentence}
-          {results.topPressureLabel ? ` The job that costs the most right now: ${results.topPressureLabel}.` : ""}
+          {results.stage.sentence}
+          {results.topPressureLabel ? ` The job that costs the most right now: ${results.topPressureLabel.replace(/[.\s]+$/, "")}.` : ""}
         </p>
+        <Link href={`/check/guide/stage/${results.stage.id}`} className="text-sm underline">
+          What this stage means
+        </Link>
       </header>
 
       <section className="studio-panel space-y-5 p-5" aria-labelledby="readiness-heading">
         <h2 id="readiness-heading" className="font-heading text-3xl">
-          Readiness
+          Next steps for how the work runs
         </h2>
-        <ScoreRing score={scores.readiness.total} label="Readiness" />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <PillarMeter label="Data" score={scores.readiness.data} max={100} description="Where the knowledge lives." />
-          <PillarMeter label="Process" score={scores.readiness.process} max={100} description="Whether the workflow is written down." />
-          <PillarMeter label="People" score={scores.readiness.people} max={100} description="Who would own a new system." />
-          <PillarMeter label="Decision" score={scores.readiness.decision} max={100} description="Who can say yes, and how fast." />
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Your data, your workflow, who would own a new system, and who decides.
+        </p>
         <SuggestionList items={results.suggestions.readiness} />
       </section>
 
       <section className="studio-panel space-y-5 p-5" aria-labelledby="visibility-heading">
         <h2 id="visibility-heading" className="font-heading text-3xl">
-          Website visibility
+          Next steps for your website
         </h2>
-        {scores.visibility.status === "complete" && scores.visibility.total != null ? (
-          <ScoreRing score={scores.visibility.total} label="AI visibility" />
+        {results.visibility.status === "complete" ? (
+          <p className="text-sm text-muted-foreground">
+            We read your public site the way an answer engine does. Here is what to fix first.
+          </p>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {scores.visibility.status === "pending"
+            {results.visibility.status === "pending"
               ? "Reading the site. This card updates on its own."
               : "We could not read the site on this pass. The rest of the check still stands."}
           </p>
         )}
-        {breakdown ? (
-          <div className="grid gap-3">
-            {PILLARS.map((pillar) => (
-              <PillarMeter
-                key={pillar.key}
-                label={pillar.label}
-                score={breakdown[pillar.key]}
-                max={pillar.max}
-                description={pillar.description}
-              />
-            ))}
-          </div>
-        ) : null}
         {results.scan ? (
           <Link href={`/scan/${results.scan.token}`} className="studio-cta w-fit">
             Open the full site scan
@@ -123,26 +101,23 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
 
       <section className="studio-panel space-y-5 p-5" aria-labelledby="growth-heading">
         <h2 id="growth-heading" className="font-heading text-3xl">
-          Growth
+          Next steps for new customers
         </h2>
-        <ScoreRing score={scores.growth.total} label="Growth" />
         <SuggestionList items={results.suggestions.growth} />
       </section>
 
       <section className="studio-panel space-y-4 p-5" aria-labelledby="pressure-heading">
         <h2 id="pressure-heading" className="font-heading text-3xl">
-          Pressure
+          Where the work slows down
         </h2>
-        {scores.pressures.length === 0 ? (
+        {results.pressures.length === 0 ? (
           <p className="text-sm text-muted-foreground">No single job was named.</p>
         ) : (
-          <ul className="space-y-2">
-            {scores.pressures.map((item) => (
-              <li key={item.code} className="flex items-center justify-between gap-3 text-sm">
-                <span>{item.code}</span>
-                <span className="studio-kicker border border-[var(--sc-hairline-strong)] px-2 py-1">
-                  Severity {item.severity}
-                </span>
+          <ul className="space-y-3">
+            {results.pressures.map((item) => (
+              <li key={item.code} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span>{item.label}</span>
+                {item.severityLabel ? <Badge variant="outline">{item.severityLabel}</Badge> : null}
               </li>
             ))}
           </ul>

@@ -11,20 +11,23 @@ export type BookingPrefill = {
   mailto: string;
 };
 
+/**
+ * What a visitor sees: a stage name and next steps for their business. The numeric scores stay on the
+ * stored check (and in HQ for staff); nothing in this payload carries a number from the scoring.
+ */
+export type StageView = { id: string; label: string; sentence: string };
+
+export type PressureView = { code: string; label: string; severityLabel: string };
+
 export type ResultsPayload = {
   domain: string | null;
-  scores: AssessmentScores;
-  bandLabel: string;
-  bandSentence: string;
+  stage: StageView;
   topPressureLabel: string | null;
+  pressures: PressureView[];
   suggestions: Record<"readiness" | "growth" | "visibility", Suggestion[]>;
   offers: Offer[];
-  scan: {
-    token: string;
-    status: string;
-    scoreTotal: number | null;
-    breakdown: unknown;
-  } | null;
+  visibility: { status: AssessmentScores["visibility"]["status"] };
+  scan: { token: string; status: string } | null;
   booking: BookingPrefill;
   appointment?: { startsAt: string; status: string };
 };
@@ -35,7 +38,7 @@ export type AssessmentPayload = {
   answers: Answers;
   qualifiers: Record<string, unknown>;
   gated: boolean;
-  preview?: { band: string; bandLabel: string };
+  preview?: { stage: string; stageLabel: string };
   results?: ResultsPayload;
 };
 
@@ -46,11 +49,12 @@ export function buildBooking(input: {
   name: string;
   domain: string | null;
   band: string;
+  stageLabel?: string;
   pressure: string;
 }): BookingPrefill {
   const domain = input.domain ?? "";
   const subject = encodeURIComponent(`Working session — ${domain || "Readiness Check"}`);
-  const body = encodeURIComponent(`Band: ${input.band}\nSite: ${domain}`);
+  const body = encodeURIComponent(`Stage: ${input.stageLabel ?? input.band}\nSite: ${domain}`);
   return {
     calLink: input.calLink || null,
     prefill: {
@@ -77,7 +81,7 @@ export function selectAssessmentPayload(input: {
   name: string | null;
   domain: string | null;
   config: AssessmentConfig;
-  scan: (SuggestionScan & { token: string; scoreTotal: number | null; breakdown: unknown }) | null;
+  scan: (SuggestionScan & { token: string }) | null;
   calLink?: string | null;
   appointment?: { startsAt: string; status: string };
 }): AssessmentPayload {
@@ -91,17 +95,21 @@ export function selectAssessmentPayload(input: {
   if (!input.scores) return base;
   const band = bandFor(input.scores.overall.total, input.config);
   if (!input.optedIn) {
-    return { ...base, preview: { band: band.id, bandLabel: band.label } };
+    return { ...base, preview: { stage: band.id, stageLabel: band.label } };
   }
   const pressureQuestion = questionById("pressure", input.config);
   const top = input.scores.topPressure;
   const topLabel = pressureQuestion?.options?.find((o) => o.value === top)?.label ?? null;
+  const pressures: PressureView[] = input.scores.pressures.map((item) => ({
+    code: item.code,
+    label: pressureQuestion?.options?.find((o) => o.value === item.code)?.label ?? item.code,
+    severityLabel: input.config.severity.find((s) => s.score === item.severity)?.label ?? "",
+  }));
   const results: ResultsPayload = {
     domain: input.domain,
-    scores: input.scores,
-    bandLabel: band.label,
-    bandSentence: band.sentence,
+    stage: { id: band.id, label: band.label, sentence: band.sentence },
     topPressureLabel: topLabel,
+    pressures,
     suggestions: selectSuggestions({
       scores: input.scores,
       answers: input.answers,
@@ -109,14 +117,8 @@ export function selectAssessmentPayload(input: {
       config: input.config,
     }),
     offers: mapPressuresToOffers({ pressures: input.scores.pressures, config: input.config }),
-    scan: input.scan
-      ? {
-          token: input.scan.token,
-          status: input.scan.status,
-          scoreTotal: input.scan.scoreTotal,
-          breakdown: input.scan.breakdown,
-        }
-      : null,
+    visibility: { status: input.scores.visibility.status },
+    scan: input.scan ? { token: input.scan.token, status: input.scan.status } : null,
     booking: buildBooking({
       calLink: input.calLink,
       token: input.token,
@@ -124,6 +126,7 @@ export function selectAssessmentPayload(input: {
       name: input.name ?? "",
       domain: input.domain,
       band: band.id,
+      stageLabel: band.label,
       pressure: top ?? "",
     }),
     appointment: input.appointment,
