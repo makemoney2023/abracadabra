@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { migrateSearch } from "@/db/migrate-search";
 import { sqliteSql } from "@/db/sql";
-import { hasSearchProperty, loadSearchTab } from "./search-tab";
+import type { Caller } from "@/lib/authz";
+import { canSeeSpaceSearch, hasSearchProperty, loadSearchTab } from "./search-tab";
 
 const NOW = Date.parse("2026-10-25T12:00:00Z");
 
@@ -105,5 +106,22 @@ describe("hasSearchProperty", () => {
     expect(await hasSearchProperty(sql, "ws-a")).toBe(true);
     expect(await hasSearchProperty(sql, "ws-b")).toBe(false);
     expect(await hasSearchProperty(sql, "ws-missing")).toBe(false);
+  });
+});
+
+describe("canSeeSpaceSearch", () => {
+  const caller = (patch: Partial<Caller>): Caller => ({ userId: "u1", staff: null, operatorOf: [], memberships: [], ...patch });
+
+  it("lets every member of the space see Search, not only owners", () => {
+    expect(canSeeSpaceSearch(caller({ memberships: [{ workspaceId: "ws-a", role: "client_member" }] }), "ws-a")).toBe(true);
+    expect(canSeeSpaceSearch(caller({ memberships: [{ workspaceId: "ws-a", role: "client_owner" }] }), "ws-a")).toBe(true);
+    expect(canSeeSpaceSearch(caller({ operatorOf: ["ws-a"] }), "ws-a")).toBe(true);
+    expect(canSeeSpaceSearch(caller({ staff: { superAdmin: true } }), "ws-a")).toBe(true);
+  });
+
+  it("keeps out people who aren't in that space", () => {
+    expect(canSeeSpaceSearch(caller({ memberships: [{ workspaceId: "ws-b", role: "client_owner" }] }), "ws-a")).toBe(false);
+    expect(canSeeSpaceSearch(caller({ operatorOf: ["ws-b"] }), "ws-a")).toBe(false);
+    expect(canSeeSpaceSearch(caller({ userId: null }), "ws-a")).toBe(false);
   });
 });

@@ -5,7 +5,7 @@ import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
 import { isHqHost } from "@/lib/host";
-import { hasSearchProperty } from "@/lib/search/search-tab";
+import { canSeeSpaceSearch, hasSearchProperty } from "@/lib/search/search-tab";
 import { legacyPreviewPath, renamePreviewLocker } from "@/lib/preview-session";
 import { SetContextLabel } from "@/components/context-bar";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export default async function WorkspaceLayout({
               <Link href={`/w/${workspace.slug}/social`}>Social</Link>
             </Button>
           ) : null}
-          {can(caller, "invite.member", { workspaceId: workspace.id }) && (await hasSearchProperty(sql, workspace.id)) ? (
+          {canSeeSpaceSearch(caller, workspace.id) && (await hasSearchProperty(sql, workspace.id)) ? (
             <Button variant="outline" size="sm" asChild>
               <Link href={`/w/${workspace.slug}/search`}>Search</Link>
             </Button>

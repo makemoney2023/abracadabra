@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
 import { openSearchDb } from "@/db/open-search";
 import { workspacesFor } from "@/db/records";
-import { can } from "@/lib/authz";
 import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
-import { loadSearchTab } from "@/lib/search/search-tab";
+import { canSeeSpaceSearch, loadSearchTab } from "@/lib/search/search-tab";
 import { SearchReportView } from "@/components/search/search-report-view";
 
 /**
- * The client's own Search page. Same access as the space's Social page (people who can invite members). The
- * organization comes from the space, never from the URL, so a client only sees their own organization's properties.
+ * The client's own Search page. Every member of the space can see it (canSeeSpaceSearch). The organization comes from
+ * the space, never from the URL, so a client only sees their own organization's properties.
  */
 export default async function SpaceSearchPage({
   params,
@@ -22,7 +21,7 @@ export default async function SpaceSearchPage({
   const query = await searchParams;
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace || !can(caller, "invite.member", { workspaceId: workspace.id })) notFound();
+  if (!workspace || !canSeeSpaceSearch(caller, workspace.id)) notFound();
   const organization = await sql.get<{ id: string }>(
     "SELECT o.id FROM workspaces w JOIN organizations o ON o.id = w.organization_id WHERE w.id = ?",
     [workspace.id],

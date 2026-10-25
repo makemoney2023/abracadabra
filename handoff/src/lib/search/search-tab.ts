@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { can, type Caller } from "@/lib/authz";
 import { listSearchProperties, type SearchProperty } from "./properties";
 import { loadSearchReport, searchRangeId, searchSort, type SearchRangeId, type SearchReport, type SearchSort } from "./report";
 
@@ -53,4 +54,13 @@ export async function hasSearchProperty(sql: Sql, workspaceId: string): Promise<
     [workspaceId],
   );
   return row?.ok === 1;
+}
+
+/**
+ * Who sees the Search page in a client's space: everyone who can see the space (all its members, owners and members
+ * alike, plus assigned operators and super-admins). Christopher's call on 2026-10-25. The page and header link still
+ * need a mapped property, and the data is always the space's own organization.
+ */
+export function canSeeSpaceSearch(caller: Caller, workspaceId: string): boolean {
+  return can(caller, "workspace.view", { workspaceId });
 }
