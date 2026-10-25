@@ -40,6 +40,9 @@ export const dynamic = "force-dynamic";
  * Size: AGENT_WORK_MAX_MB (default 10) MB of files after decoding; the JSON may be about 4/3 of that plus 1 MB. Over: 413.
  * Filed work is held: client members see it only after Client Services approves the card. A task_id never closes the
  * card: it goes to Waiting on Client Services (a Done card is reopened), unless keep_task_open is true.
+ * Errors: a filing HQ fails on is 500 { error, code: "filing_failed", work_item_id, task_id, detail }, logged on the card
+ * and kept in Unfiled; sending the same external_id again retries it. A filing that ends unfiled (202) and named a
+ * task_id carries card_moved: false and an error line.
  */
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
@@ -63,8 +66,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Check the body." }, { status: 400 });
   }
   const now = Date.now();
-  const result = await fileAgentWork(sql, openObjectStore(), agent, payload, now);
+  let result: Awaited<ReturnType<typeof fileAgentWork>>;
+  try {
+    result = await fileAgentWork(sql, openObjectStore(), agent, payload, now);
+  } catch (error) {
+    // Never an empty 500: say what happened. Errors after the work item exists are handled (and logged on the card) inside.
+    console.error("agent-work: filing failed", error instanceof Error ? error.message : error);
+    return NextResponse.json(
+      { error: "HQ failed while filing this, before anything was saved. Send the same request again.", code: "filing_failed" },
+      { status: 500 },
+    );
+  }
   if (!result.ok) {
+    if (result.error === "failed") {
+      return NextResponse.json(
+        { error: result.message, code: "filing_failed", work_item_id: result.workItemId, task_id: result.taskId, detail: result.detail },
+        { status: 500 },
+      );
+    }
     if (result.error === "too_big") return NextResponse.json({ error: result.message, code: "too_big", limit_mb: limits.maxMb }, { status: 413 });
     const status = result.error === "forbidden" ? 403 : result.error === "conflict" ? 409 : 400;
     return NextResponse.json({ error: result.message }, { status });
@@ -105,8 +124,15 @@ export async function POST(request: Request) {
       { status: result.duplicate ? 200 : 201 },
     );
   }
+  const namedCard = typeof (payload as { task_id?: unknown } | null)?.task_id === "string";
   return NextResponse.json(
-    { ok: true, duplicate: result.duplicate, state: result.state, work_item_id: result.workItemId, reason: result.reason, ...skills },
+    {
+      ok: true, duplicate: result.duplicate, state: result.state, work_item_id: result.workItemId, reason: result.reason, ...skills,
+      // Not filed, so a card it names did not move: say so plainly instead of a quiet 202.
+      ...(namedCard && result.state !== "discarded"
+        ? { card_moved: false, error: `Not filed (${result.reason ?? result.state}), so the card did not move. Staff file it from Unfiled, or fix the request and send it again with a new external_id.` }
+        : {}),
+    },
     { status: result.duplicate ? 200 : 202 },
   );
 }

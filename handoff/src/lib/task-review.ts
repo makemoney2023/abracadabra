@@ -183,7 +183,7 @@ export async function listOpenReviews(sql: Sql, input: { organizationId?: string
   for (const row of rows) {
     const asked = await sql.get<{ actor_kind: string; actor_id: string | null }>(
       `SELECT actor_kind, actor_id FROM activities
-       WHERE organization_id = ? AND kind IN ('staff.task_stage', 'agent.task_stage', 'client_services.task_stage')
+       WHERE organization_id = ? AND kind IN ('staff.task_stage', 'agent.task_stage', 'client_services.task_stage', 'github.task_stage')
          AND json_extract(data_json, '$.taskId') = ? AND json_extract(data_json, '$.stage') = 'review'
        ORDER BY created_at DESC, rowid DESC LIMIT 1`,
       [row.organization_id, row.id],
