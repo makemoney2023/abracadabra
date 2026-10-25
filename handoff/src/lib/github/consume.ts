@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { moveCardsForMergedPull } from "@/lib/card-automove";
 import { saveInstallation } from "./installs";
 
 export type GithubDelivery = {
@@ -125,6 +126,20 @@ async function onPullRequest(sql: Sql, payload: Record<string, unknown>, now: nu
       data,
       now,
     });
+    // A card named in the PR body or branch goes to Waiting on Client Services (never straight to Done).
+    if (repo.archived_at == null) {
+      await moveCardsForMergedPull(sql, {
+        organizationId: repo.organization_id,
+        repo: repo.full_name,
+        number,
+        title,
+        url,
+        author,
+        body: pull.body,
+        branch: asRecord(pull.head)?.ref,
+        now,
+      });
+    }
   }
 }
 

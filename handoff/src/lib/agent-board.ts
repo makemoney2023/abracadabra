@@ -6,6 +6,7 @@ import { resolveClientRef, type AgentPrincipal } from "@/lib/agent-work-filing";
 import { nextColumnPosition } from "@/lib/task-position";
 import { resolveFilingRequest } from "@/lib/agent-filing-review";
 import { moveTaskStage, type MoveTaskResult } from "@/lib/task-stage";
+import { recordCardFailure } from "@/lib/card-automove";
 import { BOARD_COLUMN_LABEL, columnOf as boardColumnOf, toColumn, type BoardColumn } from "@/lib/board-model";
 import type { SkillBucket } from "@/lib/skill-library";
 import { attachCardSkills, cardSkillPacks, checkPrefixes, detachCardSkills, loadCatalog } from "@/lib/skill-packs";
@@ -198,12 +199,39 @@ export function parseBoardAction(raw: unknown): BoardAction | null {
   }
 }
 
-/** One board change on one task. The task must belong to a client this agent is assigned to now. */
+type UpdateResult = { ok: true; task: BoardTask; activityId: string | null; handedTo?: string | null } | BoardError;
+
+/**
+ * One board change on one task. The task must belong to a client this agent is assigned to now.
+ * A refused change keeps its error for the caller and is also written on the card's timeline (client_agent.board_refused)
+ * when the card belongs to one of this agent's clients, so Client Services and staff see what did not happen.
+ */
 export async function updateAgentTask(
   sql: Sql,
   agent: AgentPrincipal,
   input: { taskId: string; change: BoardAction; now: number; bucket?: SkillBucket },
-): Promise<{ ok: true; task: BoardTask; activityId: string | null; handedTo?: string | null } | BoardError> {
+): Promise<UpdateResult> {
+  const result = await applyAgentTaskChange(sql, agent, input);
+  if (!result.ok) {
+    const action = input.change.action;
+    const to = input.change.action === "move" ? input.change.to : null;
+    await recordCardFailure(sql, {
+      taskId: input.taskId,
+      agent,
+      kind: "client_agent.board_refused",
+      body: `${action}${to ? ` to ${BOARD_COLUMN_LABEL[to]}` : ""} was refused (${result.status}): ${result.message}`,
+      data: { action, ...(to ? { to } : {}), status: result.status, error: result.message },
+      now: input.now,
+    }).catch(() => null);
+  }
+  return result;
+}
+
+async function applyAgentTaskChange(
+  sql: Sql,
+  agent: AgentPrincipal,
+  input: { taskId: string; change: BoardAction; now: number; bucket?: SkillBucket },
+): Promise<UpdateResult> {
   const task = await sql.get<{
     id: string; title: string; organization_id: string | null; project_id: string | null; stage: string; status: string;
     review_requested_at: number | null;
