@@ -186,6 +186,13 @@ export async function buildKnowledge() {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { text, version, work, products, services, paths, glossary } = await buildKnowledge();
+  // Christopher, Oct 25: the chat never gives the Readiness Check a fixed tip count ("three suggestions in each section").
+  const { findReadinessCountClaims } = await import(new URL("readiness-copy.mjs", site));
+  const counts = findReadinessCountClaims([text, ...glossary.map((entry) => entry.short)].join("\n"));
+  if (counts.length) {
+    console.error(`Site knowledge gives the Readiness Check a tip count; drop it ("It gives you next steps for your business."):\n${counts.join("\n")}`);
+    process.exit(1);
+  }
   if (process.argv.includes("--check")) {
     const current = await import(new URL("../src/site-knowledge.js", import.meta.url));
     if (current.SITE_KNOWLEDGE_VERSION !== version || current.SITE_KNOWLEDGE !== text || JSON.stringify(current.SITE_PATHS) !== JSON.stringify(paths) || JSON.stringify(current.SITE_GLOSSARY) !== JSON.stringify(glossary)) {

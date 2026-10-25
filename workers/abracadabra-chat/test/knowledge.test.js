@@ -94,6 +94,14 @@ test("knowledge carries the PIRX app and MCP facts in the locked words", () => {
   assert.doesNotMatch(SITE_KNOWLEDGE, /97\.4|\d+(\.\d+)?\s?% accura|Personal Record|form score/i);
 });
 
+test("knowledge, glossary entries and the system prompt never give the Readiness Check a fixed tip count", async () => {
+  const { findReadinessCountClaims } = await import(new URL("scripts/readiness-copy.mjs", site));
+  assert.deepEqual(findReadinessCountClaims(SITE_KNOWLEDGE), []);
+  assert.deepEqual(findReadinessCountClaims(SITE_GLOSSARY.map((entry) => entry.short).join("\n")), []);
+  assert.deepEqual(findReadinessCountClaims(systemPrompt()), []);
+  assert.notDeepEqual(findReadinessCountClaims("The Readiness Check gives three suggestions in each section."), []);
+});
+
 test("every case study name in the knowledge appears in the site source", async () => {
   const source = await readFile(new URL("scripts/site-data.mjs", site), "utf8");
   for (const item of SITE_WORK) assert.ok(source.includes(item.name), item.name);

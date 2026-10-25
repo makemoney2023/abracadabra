@@ -383,7 +383,7 @@ The Readiness Check is Abracadabra's online check for a business that wants to p
 
 The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.
 
-When you finish, you leave an email. It gives you next steps for your business. You see three suggestions in each section, and you can book a thirty-minute working session if you want one.
+When you finish, you leave an email. It gives you next steps for your business. You can also book a thirty-minute working session if you want one.
 
 https://abra-ca-dabra.app/glossary/readiness-check/
 
@@ -847,7 +847,7 @@ Here is a plain comparison of who each tool describes and what you leave with.
 - Cisco's index describes companies with more than 500 employees, so you get a comparison with pacesetters and not a score for one small firm.
 - The OECD tool describes the smaller firms in the Group of Seven test, so you get a short self-check that stays in the browser.
 - The AWS checklist describes a small or midsize business, so you get five steps and four stage names.
-- The Readiness Check describes the business taking it, so you get next steps for your business and three tips for each section.
+- The Readiness Check describes the business taking it, so you get next steps for your business.
 
 The Readiness Check is the one built for the firm in the room. It teaches and points the way, but it does not diagnose. We publish the method on [our site](/).
 
@@ -862,7 +862,7 @@ The Readiness Check asks about the same four parts as this note. (Abracadabra AI
 - If the business can put a new tool to work, the open question is which job to start with and who owns it day to day.
 - If a real job already uses the tools, the next gain is the job that still waits on one person.
 
-A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives three tips for each section.
+A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
 
 When the know-how is still in people's heads, you write one job down and name the owner before you shop. When the writing is only partial, two pieces are often missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 
@@ -1352,7 +1352,7 @@ Ask for them on the piece in your space. HQ opens a new card called Changes requ
 
 This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are [custom apps](https://abra-ca-dabra.app/services/custom-apps/), and some are [AI assistants and agents](https://abra-ca-dabra.app/services/ai-assistants-and-agents/). You can see more of what we have shipped in our [portfolio](https://abra-ca-dabra.app/portfolio/). If you want to see HQ itself, including how approved work reaches a social calendar, read the [HQ product page](https://abra-ca-dabra.app/products/hq/). And if agents are new to you, [What Is an AI Agent? A Plain Answer for Owners](https://abra-ca-dabra.app/blog/what-is-an-ai-agent) is a good place to start.
 
-The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today. It gives you next steps for your business, with tips for each section. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
+The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today. It gives you next steps for your business. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
 
 Sources
 1. Google Search's guidance about AI-generated content — Google Search Central, 2023-02-08 — https://developers.google.com/search/blog/2023/02/google-search-and-ai-content

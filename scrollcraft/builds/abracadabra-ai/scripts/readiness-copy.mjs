@@ -13,6 +13,10 @@ const THE_CHECK = /\b(?:the|our) check(?:'s)?\b/i;
 const CARRIES_ON = /^(?:It|Its|You|They|This|That|Then|The (?:check|band|bands|score|scores|report|results?))\b/;
 const SCORE_WORDS = /\b(?:scor(?:e|es|ed|ing)|scorecards?|bands?|four scores|out of 100|0 to 100|0–100)\b|\b(?:Early|Forming|Running)\b/;
 
+// Christopher, Oct 25: no fixed tip count either. The check gives each section as many next steps as fit the answers,
+// so "three suggestions in each section", "three tips for each section" or "up to three next steps" is never said.
+export const COUNT_WORDS = /\b(?:one|two|three|four|five|[1-5]|a few|several|up to (?:one|two|three|four|five|[1-5]))\s+(?:suggestions?|tips?|next steps?|steps|fixes|things(?: to do)?|ideas|actions|recommendations)\b(?=[^.]{0,60}\b(?:in|for|per)\s+(?:each|every)\s+(?:section|area|part)\b)|\b(?:three|up to three|up to 3)\s+(?:suggestions|tips|next steps|recommendations)\b|\b(?:suggestions|tips|next steps|recommendations)\s+(?:in|for)\s+(?:each|every)\s+section\b|\b(?:each|every|per)\s+(?:section|area)\s+(?:gets|has|shows|with)\s+(?:one|two|three|four|five|[1-5]|up to)\b/i;
+
 // Left on purpose. The privacy notice has to say what the check does with your answers.
 export const READINESS_ALLOWED = [/stores the answers you give so it can score them and show your results/];
 
@@ -57,6 +61,11 @@ export function findReadinessScoreClaims(text) {
   return claims;
 }
 
+/** Returns the sentences that give the Readiness Check a fixed tip count. */
+export function findReadinessCountClaims(text) {
+  return sentences(text).filter((sentence) => COUNT_WORDS.test(sentence));
+}
+
 const SKIP_DIRS = new Set(["node_modules", "content", "scripts", "tests", "worker", ".git"]);
 
 /** Every built page and discovery file, as [path, copy]. */
@@ -75,8 +84,17 @@ export function builtCopy(root) {
   return out;
 }
 
-/** Build step: fail when any built page promises a Readiness Check score. */
+/** The chat widget's own strings (its result card is copy a visitor reads), as [path, copy]. */
+export function widgetCopy(root) {
+  const path = join(root, "assets", "chat-widget.js");
+  const strings = [...readFileSync(path, "utf8").matchAll(/"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)].map((m) => m[1] ?? m[2]);
+  return [[relative(root, path), strings.join("\n")]];
+}
+
+/** Build step: fail when any built page promises a Readiness Check score or a fixed tip count. */
 export function assertNoReadinessScores(root) {
   const found = builtCopy(root).flatMap(([path, copy]) => findReadinessScoreClaims(copy).map((claim) => `${path}: ${claim}`));
   if (found.length) throw new Error(`Readiness Check score wording (use "${READINESS_NEXT_STEPS}"):\n${found.slice(0, 20).join("\n")}`);
+  const counts = [...builtCopy(root), ...widgetCopy(root)].flatMap(([path, copy]) => findReadinessCountClaims(copy).map((claim) => `${path}: ${claim}`));
+  if (counts.length) throw new Error(`Readiness Check tip count (drop the count; use "${READINESS_NEXT_STEPS}"):\n${counts.slice(0, 20).join("\n")}`);
 }

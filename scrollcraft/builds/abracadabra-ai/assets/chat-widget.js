@@ -1408,7 +1408,7 @@ export class AbraChat extends ElementBase {
       el("h3", null, `${data.band?.label || "Finished"}.`),
     );
     if (data.band?.sentence) card.append(el("p", null, data.band.sentence));
-    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email, then shows your next steps, with three suggestions in each section."));
+    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email. It gives you next steps for your business."));
     const report = el("a", "primary", "See your next steps");
     report.href = data.reportUrl;
     report.target = "_blank";
