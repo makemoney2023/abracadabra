@@ -96,4 +96,87 @@ describe("social review pieces", () => {
     expect(lists.ready).toEqual([]);
     expect(lists.catalog.map((piece) => piece.id)).toContain("pending");
   });
+
+  const space = { id: "ws-1", slug: "acme", display_name: "Acme Studio" };
+
+  async function addDeliverable(sql: Sql, id: string, kind: string, projectId: string | null) {
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
+         actor_kind, actor_id, created_at, updated_at
+       ) VALUES (?, 'org-1', ?, 'ws-1', ?, ?, 'in_review', 1, 1, 'agent', 'agent-1', ?, ?)`,
+      [id, projectId, id, kind, NOW, NOW],
+    );
+  }
+
+  async function addItem(sql: Sql, id: string, deliverable: string, status: string, channel: string | null) {
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES (?, ?, 1, NULL, 'static', ?, ?, NULL, '[]', NULL, ?, 0)`,
+      [id, deliverable, channel, id, status],
+    );
+  }
+
+  async function addProject(sql: Sql, id: string, include: 0 | 1) {
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at, include_in_library)
+       VALUES (?, 'org-1', ?, 'active', ?, ?, ?)`,
+      [id, id, NOW, NOW, include],
+    );
+  }
+
+  it("leaves out pieces from a project with Add to the Library unticked, and keeps them in the catalog", async () => {
+    const sql = await database();
+    await addProject(sql, "p-print", 0);
+    await addProject(sql, "p-social", 1);
+    await addDeliverable(sql, "d-print", "social_pack", "p-print");
+    await addDeliverable(sql, "d-social", "social_pack", "p-social");
+    await addItem(sql, "print-look", "d-print", "pending", "instagram");
+    await addItem(sql, "print-ready", "d-print", "approved", "instagram");
+    await addItem(sql, "social-look", "d-social", "pending", "instagram");
+    const lists = await listSocialReviewPieces(sql, client, space, new Set(["live"]));
+    expect(lists.waiting.map((piece) => piece.id)).toEqual(["pending", "social-look", "changes"]);
+    expect(lists.ready.map((piece) => piece.id)).toEqual(["ready"]);
+    expect(lists.catalog.map((piece) => piece.id)).toEqual(expect.arrayContaining(["print-look", "print-ready"]));
+  });
+
+  it("falls back to the Space's project when a deliverable has none", async () => {
+    const sql = await database();
+    await addProject(sql, "p-print", 0);
+    await sql.run("UPDATE workspaces SET project_id = 'p-print' WHERE id = 'ws-1'");
+    const lists = await listSocialReviewPieces(sql, client, space, new Set(["live"]));
+    expect(lists.waiting).toEqual([]);
+    expect(lists.ready).toEqual([]);
+    await sql.run("UPDATE projects SET include_in_library = 1 WHERE id = 'p-print'");
+    const back = await listSocialReviewPieces(sql, client, space, new Set(["live"]));
+    expect(back.waiting.map((piece) => piece.id)).toEqual(["pending", "changes"]);
+  });
+
+  it("counts a piece as social only with a network, a social pack, or a social Library tag", async () => {
+    const sql = await database();
+    await addDeliverable(sql, "d-site", "document", null);
+    await addItem(sql, "screenshot", "d-site", "pending", null);
+    await addItem(sql, "linkedin", "d-site", "pending", "linkedin");
+    await addItem(sql, "tagged", "d-site", "approved", null);
+    await addItem(sql, "pack-image", "d-1", "pending", null);
+    const tag = (id: string, item: string, deliverable: string, type: string) =>
+      sql.run(
+        `INSERT INTO deliverable_artifact_metadata (id, organization_id, workspace_id, deliverable_id, item_id, version, artifact_type, created_at, updated_at)
+         VALUES (?, 'org-1', 'ws-1', ?, ?, 1, ?, ?, ?)`,
+        [id, deliverable, item, type, NOW, NOW],
+      );
+    await tag("m-1", "tagged", "d-site", "social");
+    await tag("m-2", "pack-image", "d-1", "image");
+    const lists = await listSocialReviewPieces(sql, client, space, new Set(["live"]));
+    expect(lists.waiting.map((piece) => piece.id)).toEqual(["pending", "linkedin", "changes"]);
+    expect(lists.ready.map((piece) => piece.id).sort()).toEqual(["ready", "tagged"]);
+  });
+
+  it("checks more pieces than one D1 query can bind", async () => {
+    const sql = await database();
+    for (let index = 0; index < 120; index += 1) await addItem(sql, `bulk-${index}`, "d-1", "pending", "instagram");
+    const lists = await listSocialReviewPieces(sql, client, space, new Set(["live"]));
+    expect(lists.waiting).toHaveLength(122);
+  });
 });

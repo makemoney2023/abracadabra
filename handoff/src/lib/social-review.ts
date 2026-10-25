@@ -3,6 +3,7 @@ import type { Sql } from "@/db/sql";
 import { boardLists } from "@/components/social/social-board";
 import { isSocialItemFormat } from "@/components/social/social-piece-view";
 import type { Caller } from "./authz";
+import { socialRailSql } from "./social-piece-rule";
 
 export type SocialReviewPiece = {
   id: string;
@@ -39,7 +40,9 @@ export function reviewMedia(mediaJson: string): SocialReviewPiece["media"] {
 
 /**
  * Published social pieces this caller can see, split into work waiting for a decision
- * and approved work that is not on a live post.
+ * and approved work that is not on a live post. Waiting and ready skip removed pieces, pieces that are not social work
+ * (see socialPieceSql) and pieces from a project with "Add to the Library" unticked. The catalog keeps every published
+ * piece so calendar cards can still name what they post.
  */
 export async function listSocialReviewPieces(
   sql: Sql,
@@ -73,14 +76,19 @@ export async function listSocialReviewPieces(
     }
   }
   const ids = pieces.map((piece) => piece.id);
-  const hidden = ids.length === 0
-    ? new Set<string>()
-    : new Set(
-        (await sql.all<{ id: string }>(
-          `SELECT id FROM deliverable_items WHERE removed_at IS NOT NULL AND id IN (${ids.map(() => "?").join(", ")})`,
-          ids,
-        )).map((row) => row.id),
-      );
-  const visible = pieces.filter((piece) => !hidden.has(piece.id));
+  // The rail lists a piece only when it is still on the shelf, is social work, and its project is in the Library.
+  // D1 binds at most 100 parameters per query, so ask in chunks.
+  const shown = new Set<string>();
+  for (let start = 0; start < ids.length; start += 90) {
+    const chunk = ids.slice(start, start + 90);
+    const rows = await sql.all<{ id: string }>(
+      `SELECT i.id FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
+       WHERE i.removed_at IS NULL AND i.id IN (${chunk.map(() => "?").join(", ")})
+         AND ${socialRailSql("i", "d")}`,
+      chunk,
+    );
+    for (const row of rows) shown.add(row.id);
+  }
+  const visible = pieces.filter((piece) => shown.has(piece.id));
   return { ...boardLists(visible, liveItemIds, heldItemIds), catalog: pieces };
 }

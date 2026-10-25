@@ -205,6 +205,31 @@ describe("social read models", () => {
     expect(overview.library.approvedNotScheduled).toBe("/w/acme/library?status=ready");
   });
 
+  it("counts only social work: a screenshot filed into a document deliverable does not need a look", async () => {
+    const sql = await database();
+    const before = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    if (!before.ok) throw new Error("overview failed");
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
+         actor_kind, actor_id, created_at, updated_at
+       ) VALUES ('d-site', 'org-1', NULL, 'ws-1', 'Homepage change', 'document', 'in_review', 1, 1, 'agent', 'agent-1', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES ('i-shot', 'd-site', 1, NULL, 'static', NULL, 'after-390.jpg', NULL, '[]', NULL, 'pending', 0),
+              ('i-shot-ok', 'd-site', 1, NULL, 'static', NULL, 'before.jpg', NULL, '[]', NULL, 'approved', 1),
+              ('i-post', 'd-site', 1, NULL, 'static', 'linkedin', 'LinkedIn post', 'Caption', '[]', NULL, 'pending', 2)`,
+    );
+    const overview = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    expect(overview.ok).toBe(true);
+    if (!overview.ok) return;
+    expect(overview.needsALook).toBe(before.needsALook + 1);
+    expect(overview.approvedNotScheduled).toBe(before.approvedNotScheduled);
+  });
+
   it("leaves a project that opted out of the Library out of the social pieces and counts", async () => {
     const sql = await database();
     const before = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
@@ -218,7 +243,7 @@ describe("social read models", () => {
       `INSERT INTO deliverables (
          id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
          actor_kind, actor_id, created_at, updated_at
-       ) VALUES ('d-print', 'org-1', 'p-print', 'ws-1', 'Print brochure', 'document', 'in_review', 1, 1, 'staff', 'staff-1', ?, ?)`,
+       ) VALUES ('d-print', 'org-1', 'p-print', 'ws-1', 'Print brochure', 'social_pack', 'in_review', 1, 1, 'staff', 'staff-1', ?, ?)`,
       [NOW, NOW],
     );
     await sql.run(
