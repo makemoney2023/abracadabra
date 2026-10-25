@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { META_COPY, READINESS_META_COPY } from "@/lib/marketing/copy";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { CHECK_WHAT_YOU_GET, META_COPY, READINESS_META_COPY } from "@/lib/marketing/copy";
 
 vi.mock("@/components/check/CheckSession", () => ({ CheckSession: () => null }));
 vi.mock("@/components/check/CheckMenu", () => ({ CheckMenu: () => null }));
@@ -38,5 +40,20 @@ describe("Readiness Check metadata", () => {
       expect(item.a).not.toMatch(TIP_COUNT);
       expect(`${item.q} ${item.a}`).not.toMatch(FREE);
     }
+  });
+});
+
+describe("Readiness Check landing (/check) 'What you get'", () => {
+  const LINE = "It gives you next steps for your business.";
+  it("uses Client Services' line, never free, never a tip count, and keeps the scores (#227)", () => {
+    expect(CHECK_WHAT_YOU_GET).toContain(LINE);
+    expect(CHECK_WHAT_YOU_GET).not.toMatch(FREE);
+    expect(CHECK_WHAT_YOU_GET).not.toMatch(TIP_COUNT);
+    expect(CHECK_WHAT_YOU_GET).toMatch(/score/i);
+  });
+
+  it("is the paragraph the /check page renders", () => {
+    const source = readFileSync(path.join(process.cwd(), "src/app/check/page.tsx"), "utf8");
+    expect(source).toContain("{CHECK_WHAT_YOU_GET}");
   });
 });

@@ -4,42 +4,64 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { loadGlossary, publishedTerms } from "../scripts/glossary-data.mjs";
-import { READINESS_NEXT_STEPS, builtCopy, findReadinessCountClaims, findReadinessScoreClaims, pageCopy, widgetCopy } from "../scripts/readiness-copy.mjs";
+import { READINESS_NEXT_STEPS, assertReadinessCopy, builtCopy, findReadinessCountClaims, findReadinessFreeClaims, pageCopy, widgetCopy } from "../scripts/readiness-copy.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
 
-test("the readiness copy rule catches score promises and passes the approved line", () => {
+test("the free rule catches the Readiness Check called free and passes other uses of the word", () => {
   for (const bad of [
-    "The Readiness Check takes five to seven minutes and scores four things.",
-    "Take the Readiness Check. You get a band, four scores and three suggestions in each section.",
-    "The Readiness Check scores 0 to 39 as Early.",
-    "Themes are not a score. The Readiness Check returns the band.",
-    "Our Readiness Check is great. It scores pressure and growth.",
-    "The Readiness Check names the business. The check scores from 0 to 100.",
-  ]) assert.notDeepEqual(findReadinessScoreClaims(bad), [], bad);
+    "Take the free Readiness Check.",
+    "The Readiness Check is free and takes five to seven minutes.",
+    "Take the Readiness Check. It is free.",
+    "Our Readiness Check costs nothing: it is free of charge.",
+  ]) assert.notDeepEqual(findReadinessFreeClaims(bad), [], bad);
   for (const good of [
     `The Readiness Check takes five to seven minutes. ${READINESS_NEXT_STEPS}`,
-    "We score data, process, people and the decision in words.",
-    "Schema scores how visible a site is to answer engines.",
-    "Take the Readiness Check. Is the Cisco index a small-business score?",
-  ]) assert.deepEqual(findReadinessScoreClaims(good), [], good);
+    "The Schema scan is free.",
+    "The Readiness Check has a free-text box for the last question.",
+    "Take the Readiness Check, and feel free to stop and come back.",
+  ]) assert.deepEqual(findReadinessFreeClaims(good), [], good);
 });
 
-test("no built page, meta description, JSON-LD block or llms file promises a Readiness Check score", () => {
-  const found = builtCopy(root).flatMap(([path, copy]) => findReadinessScoreClaims(copy).map((claim) => `${path}: ${claim}`));
+test("score wording about the Readiness Check is allowed again (public scores since #227)", () => {
+  for (const ok of [
+    "The Readiness Check gives a score for readiness, growth, and website visibility.",
+    "Take the Readiness Check. You get your scores, your stage, and next steps for your business.",
+  ]) {
+    assert.deepEqual(findReadinessFreeClaims(ok), [], ok);
+    assert.deepEqual(findReadinessCountClaims(ok), [], ok);
+  }
+});
+
+test("no built page, meta description, JSON-LD block, llms file or chat widget string calls the Readiness Check free", () => {
+  const found = [...builtCopy(root), ...widgetCopy(root)].flatMap(([path, copy]) => findReadinessFreeClaims(copy).map((claim) => `${path}: ${claim}`));
   assert.deepEqual(found, []);
+  assert.doesNotThrow(() => assertReadinessCopy(root));
 });
 
-test("published glossary copy and blog sources never promise a Readiness Check score", () => {
+test("published glossary copy and blog sources never call the Readiness Check free", () => {
   for (const term of publishedTerms(loadGlossary())) {
     const { draft, changes, ...shown } = term;
-    assert.deepEqual(findReadinessScoreClaims(JSON.stringify(shown).replace(/\\n/g, "\n").replace(/","/g, '".\n"')), [], term.slug);
+    assert.deepEqual(findReadinessFreeClaims(JSON.stringify(shown).replace(/\\n/g, "\n").replace(/","/g, '".\n"')), [], term.slug);
   }
   for (const slug of ["ai-readiness-assessment", "why-we-build-on-cloudflare", "answer-engine-optimization", "how-can-ai-help-small-businesses", "how-client-work-flows-through-hq", "what-is-an-ai-agent", "ai-readiness-framework", "is-my-business-ready-for-ai", "ai-readiness-checklist", "ai-readiness-assessment-questionnaire"]) {
     const source = read(`content/blog/${slug}.md`).replace(/^(\s*-?\s*\w+:\s*)/gm, "\n");
-    assert.deepEqual(findReadinessScoreClaims(source), [], slug);
+    assert.deepEqual(findReadinessFreeClaims(source), [], slug);
+    assert.deepEqual(findReadinessCountClaims(source), [], slug);
   }
+});
+
+test("the homepage FAQ answer about the Readiness Check uses Client Services' line, in the page and its FAQ JSON-LD", () => {
+  const home = read("index.html");
+  const visible = home.slice(home.indexOf('<section id="faq"'), home.indexOf('<section id="start"'));
+  assert.ok(pageCopy(visible).includes(READINESS_NEXT_STEPS));
+  const faq = JSON.parse([...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((j) => j.includes('"FAQPage"')));
+  const nodes = faq["@graph"] ?? [faq];
+  const answer = nodes.find((n) => n["@type"] === "FAQPage").mainEntity.find((q) => /ready to put AI to work/.test(q.name)).acceptedAnswer.text;
+  assert.ok(answer.includes(READINESS_NEXT_STEPS), answer);
+  assert.deepEqual(findReadinessFreeClaims(answer), []);
+  assert.deepEqual(findReadinessCountClaims(answer), []);
 });
 
 test("the Readiness Check pages use Client Services' line", () => {
@@ -52,14 +74,13 @@ test("the Readiness Check pages use Client Services' line", () => {
   assert.ok(read("glossary/index.html").includes(READINESS_NEXT_STEPS));
 });
 
-test("the chat widget card and the chat's site knowledge promise next steps, not a score", () => {
+test("the chat widget card and the chat's site knowledge promise next steps and never call the check free", () => {
   const widget = read("assets/chat-widget.js");
   const intro = widget.match(/"Take the AI Readiness Check\."\),\s*el\("p", null, "([^"]+)"/)[1];
   assert.ok(intro.includes(READINESS_NEXT_STEPS), intro);
-  assert.doesNotMatch(intro, /score|band/i);
-  assert.doesNotMatch(widget, /See your score|shows each score/);
+  assert.deepEqual(findReadinessFreeClaims(intro), []);
   const knowledge = readFileSync(join(root, "../../../workers/abracadabra-chat/src/site-knowledge.js"), "utf8").replace(/\\n/g, "\n");
-  assert.deepEqual(findReadinessScoreClaims(knowledge), []);
+  assert.deepEqual(findReadinessFreeClaims(knowledge), []);
 });
 
 test("the count rule catches fixed tip counts and passes the approved line", () => {
