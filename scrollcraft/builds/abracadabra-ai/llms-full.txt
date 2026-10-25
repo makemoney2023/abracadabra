@@ -243,7 +243,7 @@ AI readiness is how prepared a business is to put an AI tool to work and get val
 
 A business can buy a strong tool and still get little from it. AWS makes the same point in its checklist for smaller firms: readiness is not just a technology choice. It covers your information, your workflows, your people and the rules for how AI is used and checked.
 
-On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to see where you stand.
+On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to start. It gives you next steps for your business.
 
 https://abra-ca-dabra.app/glossary/ai-readiness/
 
@@ -379,11 +379,11 @@ https://abra-ca-dabra.app/glossary/machine-learning/
 
 ### Readiness Check
 
-The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes and scores four things: pressure, readiness, growth and how well answer engines can read your site. You get a band, four scores and three suggestions in each section.
+The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.
 
-The check asks one question per screen. Three scores come from your answers. Pressure is the jobs that eat your week. Readiness is whether the data, the workflow, the owner and the decision can support real work. Growth is where new customers come from. The fourth score, visibility, is a live read of your public website.
+The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.
 
-When you finish, you leave an email and then see your band, your four scores and three suggestions in each section. The four bands are Early, Forming, Ready and Running. You can also book a thirty-minute working session if you want one.
+When you finish, you leave an email. It gives you next steps for your business. You see three suggestions in each section, and you can book a thirty-minute working session if you want one.
 
 https://abra-ca-dabra.app/glossary/readiness-check/
 
@@ -528,7 +528,7 @@ Hire a consultant to name the job. Hire an agency to build after the job is name
 
 Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system once those three are written down. When the agency comes first, the build has no owner. We've watched that happen in the wrong order more than once. The proposal arrives with staff, a toolset, and a start date. Nobody in the room can say which output a person still has to check. The build goes ahead anyway, because the calendar was the only decision anyone made.
 
-The [consultant note](https://abra-ca-dabra.app/blog/ai-consultant-for-small-business) is the list of questions we wish owners had before the first sales call. The [buy-or-build note](https://abra-ca-dabra.app/blog/off-the-shelf-ai-or-custom-software) covers whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) gives you a matching score when the choice itself is the thing you keep putting off. Hiring is a decision, so score it before you sign. A signature on a vague scope is not a plan. It is a hope with a payment schedule.
+The [consultant note](https://abra-ca-dabra.app/blog/ai-consultant-for-small-business) is the list of questions we wish owners had before the first sales call. The [buy-or-build note](https://abra-ca-dabra.app/blog/off-the-shelf-ai-or-custom-software) covers whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) gives you next steps when the choice itself is the thing you keep putting off. Hiring is a decision, so think it through before you sign. A signature on a vague scope is not a plan. It is a hope with a payment schedule.
 
 ## Two training figures, two populations
 
@@ -684,7 +684,7 @@ The Chamber's 2025 report says 58% of small businesses use generative AI, up fro
 
 Statistics Canada found that 12.2% of businesses used AI to make goods or deliver services in 2025, up from 6.1% a year earlier. (Statistics Canada, 2025) That question is harder and narrower, because it is about the thing you sell. A bakery that uses a tool to write the weekly email can sit inside the Chamber number and outside the Statistics Canada number. A shop where a model suggests orders and a person places them is close to the second question. It may still not meet it. Read the verbs, which are make and deliver. They are not draft, brainstorm, or "we tried it once."
 
-A firm can say yes to the Chamber question and no to the Statistics Canada question. Plan from the job you can name, and do not average the two percentages into one readiness rate. This site does not publish a combined score from the Readiness Check. If someone hands you one blended number made from these two, they have glued different questions together.
+A firm can say yes to the Chamber question and no to the Statistics Canada question. Plan from the job you can name, and do not average the two percentages into one readiness rate. This site does not publish a combined readiness rate, and neither does the Readiness Check. If someone hands you one blended number made from these two, they have glued different questions together.
 
 ## A worked example
 
@@ -724,7 +724,7 @@ Name the job, score the data, write the process, assign a checker, then keep or 
 
 An AI implementation framework is the order of work you follow once the job already has a name. NIST calls the risk side of that work Govern, Map, Measure, and Manage. (NIST) We use five stages in plain words, because that is how the talk goes when we sit down with an owner. First we name the job. Then we score the data and write the process. After that we pick a checker, and last we keep the work or stop it.
 
-Most small firms we meet are still in the [Forming band](https://check.abra-ca-dabra.app/band/forming) while those stages are unfinished. A tool is open on someone's laptop and the rest is a hope. A hope is not a stage, and if you skip one you get the stall we describe in the [stall note](https://abra-ca-dabra.app/blog/why-ai-pilots-stall). The score that should come before any build is in the [readiness framework](https://abra-ca-dabra.app/blog/ai-readiness-framework). This note covers only the order of work after that score exists.
+Most small firms we meet are still [partly ready](https://check.abra-ca-dabra.app/check/guide/readiness) while those stages are unfinished. A tool is open on someone's laptop and the rest is a hope. A hope is not a stage, and if you skip one you get the stall we describe in the [stall note](https://abra-ca-dabra.app/blog/why-ai-pilots-stall). The owner's own read, which should come before any build, is in the [readiness framework](https://abra-ca-dabra.app/blog/ai-readiness-framework). This note covers only the order of work after that read exists.
 
 We like a plain, slow order, but most owners like a demo. A demo feels like progress because someone in the room finally relaxes. An order feels like a delay because it is only a list. The list is the work, though, and a framework you cannot walk through on one page is just a brochure. A brochure will not run your business on Monday morning.
 
@@ -779,7 +779,7 @@ An AI readiness questionnaire should bring four themes into the open before anyo
 
 NIST groups the risk work into four parts, which are Govern, Map, Measure, and Manage. (NIST) We are not asking a small firm to build a risk program with those labels on the door. We are asking the questionnaire to cover the same ground in plain speech. Govern is who gets to decide, and Map is what the job really is. Measure is how you would know the output is wrong. And Manage is what you do when it is. A questionnaire that cannot find those four ideas, even in simpler words, is really a sales form.
 
-The [framework](https://abra-ca-dabra.app/blog/ai-readiness-framework) is how we score the answers, and the [assessment](https://abra-ca-dabra.app/blog/ai-readiness-assessment) is the longer reading. The [growth guide](https://check.abra-ca-dabra.app/check/guide/growth) is what the check offers after the score. Themes come first, and a band comes after that. A tool comes last, and sometimes it does not come at all.
+The [framework](https://abra-ca-dabra.app/blog/ai-readiness-framework) is how we score the answers, and the [assessment](https://abra-ca-dabra.app/blog/ai-readiness-assessment) is the longer reading. The [growth guide](https://check.abra-ca-dabra.app/check/guide/growth) is what the check offers once you have answers. Themes come first, and next steps come after that. A tool comes last, and sometimes it does not come at all.
 
 We like a short questionnaire because length feels thorough and often hides the blank. An owner may answer a long run of soft questions and still not say where the record lives. When that happens, the form has dodged the only question that mattered. We would rather ask four blunt questions that are allowed to be answered with "we do not know."
 
@@ -795,7 +795,7 @@ Ask where the one place the facts live is for the job. Ask which step is written
 
 Say them in the language of the job, or they stay abstract. The question "Where do the facts live?" becomes a plainer one about a real call. When a customer calls about the thing we promised, which page does the person on the phone open? The question about habit becomes a different one. What do we do when the usual person is out, and is that written anywhere a new hire could find? The question about rejecting becomes a third one. Who is allowed to say that this message does not go to the customer? Then the question about what we will stop becomes a last one. If this works, which notebook can we close for good?
 
-A questionnaire that cannot survive that translation is still just a theme list. Themes are not a score, because they are the questions you refuse to skip. We send people to the growth guide once a real score exists. By then the next move is about getting better at the job and not about collecting more questions. Please do not open that guide to avoid the four questions, and open it only after you have answers you can stand behind.
+A questionnaire that cannot survive that translation is still just a theme list. Themes are not a score, because they are the questions you refuse to skip. We send people to the growth guide once real answers exist. By then the next move is about getting better at the job and not about collecting more questions. Please do not open that guide to avoid the four questions, and open it only after you have answers you can stand behind.
 
 We also want the questionnaire to record disagreement. If the owner and the person who does the job give different answers, the form should show both and not a negotiated average. An average is how a blank turns into a tick. Write "owner says the binder, dispatcher says her head" and leave it ugly. Ugly is honest. A clean tick that needed a compromise in the hallway is how you buy a tool for a process that does not exist.
 
@@ -822,9 +822,9 @@ Sources
 
 https://abra-ca-dabra.app/blog/ai-readiness-assessment
 
-An AI readiness assessment scores data, process, people, and decisions. Compare public tools, then read what each Readiness Check band means.
+An AI readiness assessment looks at data, process, people, and decisions. Compare the public tools, then see what our Readiness Check gives you.
 
-An AI readiness assessment asks whether a business can put a new tool to work. Public indexes and checklists answer that question for different groups of people. The groups are easy to mix up. This note compares them. Then it explains what the [Readiness Check guide](https://check.abra-ca-dabra.app/check/guide/readiness) scores for the firm that is actually in the room.
+An AI readiness assessment asks whether a business can put a new tool to work. Public indexes and checklists answer that question for different groups of people. The groups are easy to mix up. This note compares them. Then it explains what the [Readiness Check guide](https://check.abra-ca-dabra.app/check/guide/readiness) looks at for the firm that is actually in the room.
 
 We get asked for "our number," as if readiness were a credit score you could borrow from a headline. A figure about leaders at big companies cannot tell a clinic whether the front desk and the clinician use the same record.
 
@@ -847,34 +847,34 @@ Here is a plain comparison of who each tool describes and what you leave with.
 - Cisco's index describes companies with more than 500 employees, so you get a comparison with pacesetters and not a score for one small firm.
 - The OECD tool describes the smaller firms in the Group of Seven test, so you get a short self-check that stays in the browser.
 - The AWS checklist describes a small or midsize business, so you get five steps and four stage names.
-- The Readiness Check describes the business taking it, so you get four scores, a band, and three tips for each section.
+- The Readiness Check describes the business taking it, so you get next steps for your business and three tips for each section.
 
 The Readiness Check is the one built for the firm in the room. It teaches and points the way, but it does not diagnose. We publish the method on [our site](/).
 
 We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious, but serious is not the same as useful. If we told a clinic that it had failed readiness, we would be borrowing a doctor's tone for a business talk. The check describes where you stand and points to a next page. That is the promise we make.
 
-## What each band means
+## What the check gives you
 
-The check scores from 0 to 100. The bands are Early (0–39), Forming (40–59), Ready (60–79), and Running (80–100). (Abracadabra AI)
+The Readiness Check asks about the same four parts as this note. (Abracadabra AI) It gives you next steps for your business. The step depends on where the work stands today.
 
-- Early: The work that matters still lives in people's heads, so the first useful step is to write one job down and name who owns it.
-- Forming: Parts of the work are written down, so a named owner and one place for the facts can turn that into something a team can run.
-- Ready: The business can put a new tool to work, so the open question is which job to start with and who owns it day to day.
-- Running: A real job already uses the tools, so the next gain is the job that still waits on one person.
+- If the work that matters still lives in people's heads, the first useful step is to write one job down and name who owns it.
+- If parts of the work are written down, a named owner and one place for the facts can turn that into something a team can run.
+- If the business can put a new tool to work, the open question is which job to start with and who owns it day to day.
+- If a real job already uses the tools, the next gain is the job that still waits on one person.
 
-A band tells you where you stand today. It is not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes with one question on each screen. It gives three tips for each section.
+A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives three tips for each section.
 
-Early means the know-how is still in people's heads. So you write one job down and name the owner before you shop. Forming means the writing is only partial. Two pieces are missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
+When the know-how is still in people's heads, you write one job down and name the owner before you shop. When the writing is only partial, two pieces are often missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 
-Ready means a new tool can land. The argument left is which job goes first and who lives with it on an ordinary day. Running means a real job already uses the tools. The gain left is the job that still waits on one person. Everyone goes around that job because it is "easier to ask her."
+When a new tool can land, the argument left is which job goes first and who lives with it on an ordinary day. When a real job already uses the tools, the gain left is the job that still waits on one person. Everyone goes around that job because it is "easier to ask her."
 
-People treat Running as the compliment and Early as the scolding, but we do not. Early is a clear description, and it is often the honest one. A clinic can be excellent at care and still be Early at the paperwork around recalls. Those are different skills. The band is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
+People hear an early step as a scolding, but we do not. A first step is a clear description, and it is often the honest one. A clinic can be excellent at care and still be new to the paperwork around recalls. Those are different skills. The step is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
 
 The next note looks at [how surveys count AI in small businesses](https://abra-ca-dabra.app/blog/how-can-ai-help-small-businesses). That is a different question from whether one firm is ready. A survey can talk about firms in general. It cannot say whether your front desk and your clinician agree on the chart note. We try not to let the wide question answer the narrow one.
 
 ## A worked example
 
-Say we are in a small physiotherapy clinic after the last patient has gone home. One person runs the front desk. One clinician sees most of the repeat visits.
+Say we are in a small physiotherapy clinic after the last patient has gone home. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, and it is not a clinic we measured.
 
 … Full post: https://abra-ca-dabra.app/blog/ai-readiness-assessment
 
@@ -893,7 +893,7 @@ Questions to answer before you buy an AI tool, grouped by data, process, people,
 
 An AI readiness checklist is the list of questions you answer before you pay for a tool. We use it when an owner has a demo booked. The owner has not yet said which job the tool is for. The questions fall into four groups, which are data, process, people, and the decision. A vendor's feature list cannot stand in for any of them.
 
-The [Readiness Check](https://check.abra-ca-dabra.app/check) scores the same four groups. The [assessment note](https://abra-ca-dabra.app/blog/ai-readiness-assessment) compares the public tools, and the [data note](https://abra-ca-dabra.app/blog/ai-ready-data) stays on the first group. If the process score is your weak spot, the [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the page we hand over.
+The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about the same four groups, and it gives you next steps for your business. The [assessment note](https://abra-ca-dabra.app/blog/ai-readiness-assessment) compares the public tools, and the [data note](https://abra-ca-dabra.app/blog/ai-ready-data) stays on the first group. If the process is your weak spot, the [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the page we hand over.
 
 We think of the checklist as a brake. The tour of a tool always looks tidy. The real test comes on the busy afternoon after it, when nobody remembers which screen is the right one. A tick means you can point to the answer, and a blank means you cannot. The blanks are the useful part.
 
@@ -929,7 +929,7 @@ We ask who uses the tool on a normal day. We ask who may send its words to a cus
 
 The decision questions are separate. What would count as success, who can stop the experiment, and what happens if the tool is wrong? "Sam will keep an eye on it" names a person. "The customer hears from the record, not from memory" is a decision. So is "if it sends a wrong message, we turn it off the same day." We write each one on its own line.
 
-A tick list does not tell you which gap is largest. The Readiness Check turns the same four groups into a band. We still want the paper list first. A band without a talk is just a costume on a number. The list is the talk. The band is what you get when you want the same questions scored the same way next time.
+A tick list does not tell you which gap is largest. The Readiness Check asks about the same four groups and gives you next steps for your business. We still want the paper list first. A next step without a talk is easy to skip. The list is the talk. The check is what you use when you want the same questions asked the same way next time.
 
 When the room is being polite, we add one more decision question. What will you stop doing if this works? If the answer is nothing, the tool is a hobby. The checklist is allowed to end with a no. A no that names the blank box is a better result than a yes that names a logo.
 
@@ -939,7 +939,7 @@ Say we are sitting after close with the owner of a neighborhood hardware shop. A
 
 The owner wants a tool that drafts the message saying a special order is in. It would also suggest which supplier to chase. The demo was slick, but the checklist is the part where we ignore the demo.
 
-We start with data. The owner says the computer is the one place the facts live.
+We start with data.
 
 … Full post: https://abra-ca-dabra.app/blog/ai-readiness-checklist
 
@@ -952,7 +952,7 @@ Sources
 
 https://abra-ca-dabra.app/blog/ai-readiness-framework
 
-Score data, process, people, and the decision in words, then read the band. Public research names the gaps. The check names the one that is yours.
+Score data, process, people, and the decision in words. Public research names the gaps. The Readiness Check gives you next steps for your business.
 
 An AI readiness framework is a way to score the business before you score a tool. We use it when an owner wants a plan and all anyone has offered is a product tour. The tour can wait, because the score is about the work.
 
@@ -960,17 +960,17 @@ NIST groups AI risk work as Govern, Map, Measure, and Manage. (NIST) This note u
 
 The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) is the matching page. The [assessment](https://abra-ca-dabra.app/blog/ai-readiness-assessment) is the longer note, and the [questionnaire](https://abra-ca-dabra.app/blog/ai-readiness-assessment-questionnaire) is the list of questions. The framework is what you do with the answers once they are on paper. You do not turn them into a fake share of readiness. You give each group a word you can defend.
 
-## What the bands mean
+## What the check adds
 
-The Readiness Check scores 0 to 39 as Early, 40 to 59 as Forming, 60 to 79 as Ready, and 80 to 100 as Running. (Abracadabra AI) The check helps you see where to look next. It does not certify a business.
+The Readiness Check asks about the same four groups. (Abracadabra AI) It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
 
-Read those bands as a shape and not as a medal. Early means the work that matters still lives in people's heads. Forming means some of it is written down, but nobody clearly owns it. Ready means you could put a system on the job without making up the job at the same time. Running means the tools already do real work, and the leftover pain is the task everyone still hands to one person. A band without those sentences is just a number. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
+Read the result as a shape and not as a medal. Sometimes the work that matters still lives in people's heads. Sometimes some of it is written down, but nobody clearly owns it. Sometimes you could put a system on the job without making up the job at the same time. And sometimes the tools already do real work, and the leftover pain is the task everyone still hands to one person. A result without those sentences is just a label. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
 
 Gartner said in February 2025 that 63% of respondents do not have, or are unsure they have, the data practices AI needs. (Gartner, 2025) Through 2026, companies will abandon 60% of AI projects that lack AI-ready data. A framework that scores data as running while the facts sit in a shared inbox is scoring a wish. We keep that idea in the room during the talk. The research is about the people Gartner asked and not about your shop. It still describes the failure we watch, where the project looks alive until the record has to carry it.
 
 Cisco's 2025 index surveyed 8,000 senior leaders at companies with more than 500 employees. (Cisco, 2025) The leaders it called pacesetters were near 13%, and their companies were 4 times more likely to move a pilot into production. That group is not a small business. The pattern still matters, because production follows a written process and not a demo. If you quote the 13% at a bakery and call the baker not a pacesetter, you have changed the group. The framework helps us avoid that slide. We score the bakery in words, and we do not borrow a big-company league table.
 
-Score the four groups in words first. Then run the check if you want the band. Words come before numbers because a number is easy to flatter. If you jump to the band, you will argue with the number and not with the inbox.
+Score the four groups in words first. Then take the check if you want next steps. Words come first because a label is easy to flatter. If you jump to the label, you will argue with it and not with the inbox.
 
 Here is how we pick the words, so they do not turn into moods. Data is absent when nobody can name the record. It is partial when a record exists, but people keep a side copy they trust more. It is in place when one current record is the one a new person would open, and a system could read it without anyone retyping it. It is running when that record already feeds a job you do every week, and someone notices when a field is wrong.
 
@@ -980,7 +980,7 @@ People is absent when nobody has said who may send output to a customer, and nob
 
 The decision is absent when success means less chaos. It is partial when success has a name but nobody can end the trial. It is in place when success, the person who can stop it, and the rule for wrong output are all written as sentences. It is running when you have already stopped something because the rule said to. A decision that has never met a bad week is still a draft.
 
-The band sits on top of those words and does not replace them. Early, Forming, Ready, and Running tell you the shape, and the four words tell you where to work. We have watched owners cheer for Ready and ignore a data score that was still partial. The framework makes that cheer walk past the weak group first.
+The check sits on top of those words and does not replace them. Its next steps point you somewhere, and the four words tell you where to work. We have watched owners cheer for a good result and ignore data that was still partial. The framework makes that cheer walk past the weak group first.
 
 ## A worked example
 
@@ -992,7 +992,7 @@ First, data. The special-order book is a paper notebook in the kitchen. The fron
 
 Next, process. The usual path is real. An email comes in, the kitchen lead checks the book, the owner sets a price, and the front lead replies. The exception is a customer who changes the head count the day before, or a date the kitchen lead half promised on the phone. Nobody wrote that down, so process is partial. The usual path is not the whole process. If we scored it in place, the tool would invent the head count change and sound sure about it.
 
-Then people. The front lead already drafts replies in a personal account when she falls behind, and then she pastes them into the inbox. The owner did not know that customer words were being drafted somewhere else.
+Then people. The front lead already drafts replies in a personal account when she falls behind, and then she pastes them into the inbox. The owner did not know that customer words were being drafted somewhere else. Nobody is named as the person who may send, and nobody is named as the person who may block a send.
 
 … Full post: https://abra-ca-dabra.app/blog/ai-readiness-framework
 
@@ -1306,7 +1306,7 @@ A request comes in, HQ files it, Grok Bot agents build it, Client Services check
 
 Here is the short answer. A client sends us a request, and HQ turns it into a card on that client's board. Grok Bot agents with the right skills build the work and file it back to HQ, where it is held. Client Services checks it against the request, and a person on our team approves it. Only then does it appear in the client's own space in HQ.
 
-This note walks through each step. HQ also has its own page: see [HQ, the client workspace](https://abra-ca-dabra.app/products/hq/). The path below is the same one we use for our own site, and it is the kind of system we build for clients who want agents doing real work. If you want to know whether your business is ready for that, the [AI Readiness Check](https://check.abra-ca-dabra.app/check) is the place to start.
+This note walks through each step. HQ also has its own page: see [HQ, the client workspace](https://abra-ca-dabra.app/products/hq/). The path below is the same one we use for our own site, and it is the kind of system we build for clients who want agents doing real work. If you are thinking about that, the [AI Readiness Check](https://check.abra-ca-dabra.app/check) is the place to start. It gives you next steps for your business.
 
 ## What happens when you send us a request?
 
@@ -1352,7 +1352,7 @@ Ask for them on the piece in your space. HQ opens a new card called Changes requ
 
 This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are [custom apps](https://abra-ca-dabra.app/services/custom-apps/), and some are [AI assistants and agents](https://abra-ca-dabra.app/services/ai-assistants-and-agents/). You can see more of what we have shipped in our [portfolio](https://abra-ca-dabra.app/portfolio/). If you want to see HQ itself, including how approved work reaches a social calendar, read the [HQ product page](https://abra-ca-dabra.app/products/hq/). And if agents are new to you, [What Is an AI Agent? A Plain Answer for Owners](https://abra-ca-dabra.app/blog/what-is-an-ai-agent) is a good place to start.
 
-The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today and gives you scores, a band and tips for each section. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
+The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today. It gives you next steps for your business, with tips for each section. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
 
 Sources
 1. Google Search's guidance about AI-generated content — Google Search Central, 2023-02-08 — https://developers.google.com/search/blog/2023/02/google-search-and-ai-content
@@ -1471,19 +1471,19 @@ Sources
 
 https://abra-ca-dabra.app/blog/is-my-business-ready-for-ai
 
-Ready means the data, the process, the people, and the decision can carry a tool. This note reads the Check bands against a large-firm index.
+Ready means the data, the process, the people, and the decision can carry a tool. This note reads those signs against a large-firm index.
 
 A business is ready for AI when one named job can move to a tool without anyone inventing the process along the way. Ready is not a mood, and it is not a purchase. It describes the data, the process, the people, and the decision around that one job. If any one of those four is still a shrug, then the job is not ready yet.
 
-The [Readiness Check](https://check.abra-ca-dabra.app/check) scores this as four bands. Early is 0–39, Forming is 40–59, Ready is 60–79, and Running is 80–100. (Abracadabra AI) Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Early is allowed to be the true state. Plenty of good businesses are Early on the job they just tried to automate, and they are fine at the rest of their work.
+The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about these same signs. (Abracadabra AI) It gives you next steps for your business. Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Not ready yet is allowed to be the true state. Plenty of good businesses are not ready on the job they just tried to automate, and they are fine at the rest of their work.
 
-The [Early band](https://check.abra-ca-dabra.app/check/guide/band/early) and the [Ready band](https://check.abra-ca-dabra.app/check/guide/band/ready) spell out those states in full sentences. The [assessment note](https://abra-ca-dabra.app/blog/ai-readiness-assessment) compares the public tools side by side. Read the band pages when you want the exact wording. Read this note when you want to know which signs to trust before a vendor tells you what the signs are.
+The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) spells out those states in full sentences. The [assessment note](https://abra-ca-dabra.app/blog/ai-readiness-assessment) compares the public tools side by side. Read the guide when you want the exact wording. Read this note when you want to know which signs to trust before a vendor tells you what the signs are.
 
 ## What a large-firm index is counting
 
-Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations with more than 500 employees, across 30 markets and 26 industries. (Cisco, 2025) The firms it called pacesetters were near 13% of that sample, and they were 4 times more likely to move a pilot into production. That sample is not a census of small businesses. So a small firm can be Ready on our check and still look nothing like a pacesetter.
+Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations with more than 500 employees, across 30 markets and 26 industries. (Cisco, 2025) The firms it called pacesetters were near 13% of that sample, and they were 4 times more likely to move a pilot into production. That sample is not a census of small businesses. So a small firm can be ready for one job and still look nothing like a pacesetter.
 
-We say that last part slowly, because owners often miss it. Ready on our check means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders, and the 13% describes those organizations. It is not a report card for a shop, a clinic, or a trades desk. Suppose a salesperson says you should buy now to catch up with the pacesetters. Then they have glued a large-firm statistic to a small-firm fear. The 4 times gap in moving pilots into production is real inside that sample. It does not mean your service writer is late.
+We say that last part slowly, because owners often miss it. Ready, in this note, means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders, and the 13% describes those organizations. It is not a report card for a shop, a clinic, or a trades desk. Suppose a salesperson says you should buy now to catch up with the pacesetters. Then they have glued a large-firm statistic to a small-firm fear. The 4 times gap in moving pilots into production is real inside that sample. It does not mean your service writer is late.
 
 Use the index as a picture of a different size of firm. The useful part is that moving a pilot into production follows a written process. The useless move is to decide you are behind a business that staffs a whole crew for its pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
 
@@ -1495,7 +1495,7 @@ The signs are easy to see when the person who does the job is in the room. "Name
 
 The bad signs are the same facts turned around. Knowledge in one head feels like loyalty to a great employee, but it also means the job stops when that person is out. Unwritten exceptions feel like flexibility, but they are where a tool will start to improvise. Nobody being allowed to send feels like caution, until you notice that someone is already sending from a personal account. And success with no definition is how a pilot turns into a subscription.
 
-A small firm can show the good signs on one job and the bad signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The check's bands describe the state you are in, based on how you answered, and they are not a tattoo on the business. Early and Forming are 0–39 and 40–59, and they are descriptions. Ready and Running are 60–79 and 80–100, and they are descriptions too. None of them means you have bought a product, and none of them means you have failed as an owner.
+A small firm can show the good signs on one job and the bad signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The signs describe the state you are in, based on how you answered, and they are not a tattoo on the business. Not ready yet is a description, and so is ready. Neither one means you have bought a product, and neither one means you have failed as an owner.
 
 ## A worked example
 
@@ -1506,6 +1506,8 @@ The owner asked after a vendor showed a tool that drafts customer updates from t
 Walk the good signs. Is there one place the facts live, and does it have a name? The ticket writer says it is the shop system. The lead tech says she writes the real finding on the paper that stays on the dash. The system ticket holds only what the ticket writer had time to type, and he is often still with the last customer. The owner says she trusts whatever the ticket writer texts her. That makes three candidates, so the source is not named, and that is the first bad sign already. The true finding sits on the lead tech's paper and in her head, which is the "one head" sign, even though the ticket writer has a system. A system that nobody believes is not the one place the facts live.
 
 Are the steps written down? The sunny path is written, and it goes car in, inspect, call, approve, repair, car out. The exceptions are not written. What if the customer does not answer and the bay is needed? What if the lead tech finds a second problem after the yes? What if the ticket writer is off and the other writer does not know the lead tech's shorthand? Those are unwritten exceptions, and that is the second bad sign.
+
+Does a person own the output? The vendor's tool would send a text, and the ticket writer assumes he would glance at it. The lead tech says she would not see it until the customer called angry.
 
 … Full post: https://abra-ca-dabra.app/blog/is-my-business-ready-for-ai
 

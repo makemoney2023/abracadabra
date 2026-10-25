@@ -438,7 +438,7 @@
       "short": "AI readiness is how prepared a business is to put an AI tool to work and get value from it. It depends on the business more than the tool. That means its data, the way work gets done, its people and who makes decisions.",
       "explainer": [
         "A business can buy a strong tool and still get little from it. AWS makes the same point in its checklist for smaller firms: readiness is not just a technology choice. It covers your information, your workflows, your people and the rules for how AI is used and checked.",
-        "On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to see where you stand."
+        "On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to start. It gives you next steps for your business."
       ],
       "sections": [
         {
@@ -450,7 +450,7 @@
         {
           "q": "How do you measure AI readiness?",
           "a": [
-            "With an assessment that scores each area, so the gap is plain. AWS describes an AI readiness assessment as a structured look at data, technology, processes and people. Our Readiness Check gives a band and a few next steps."
+            "With an assessment that scores each area, so the gap is plain. AWS describes an AI readiness assessment as a structured look at data, technology, processes and people. Our Readiness Check is a different kind of tool. It gives you next steps for your business."
           ]
         }
       ],
@@ -465,7 +465,7 @@
         },
         {
           "question": "How can I check my AI readiness?",
-          "answer": "Use an assessment that scores data, process, people and decisions. The Abracadabra Readiness Check takes five to seven minutes and gives you a band and suggestions."
+          "answer": "Use an assessment that scores data, process, people and decisions. The Abracadabra Readiness Check takes five to seven minutes. It gives you next steps for your business."
         }
       ],
       "related": [
@@ -839,28 +839,28 @@
       "batch": 2,
       "order": 1,
       "question": "What is the Readiness Check?",
-      "description": "The Readiness Check is Abracadabra's five-to-seven-minute check of a business. It scores pressure, readiness, growth and website visibility.",
+      "description": "The Readiness Check is Abracadabra's five-to-seven-minute online check for a business that wants to use AI. It gives you next steps for your business.",
       "category": "Abracadabra products",
       "priority": "High",
       "alternateName": [
         "Abracadabra Readiness Check"
       ],
-      "short": "The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes and scores four things: pressure, readiness, growth and how well answer engines can read your site. You get a band, four scores and three suggestions in each section.",
+      "short": "The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.",
       "explainer": [
-        "The check asks one question per screen. Three scores come from your answers. Pressure is the jobs that eat your week. Readiness is whether the data, the workflow, the owner and the decision can support real work. Growth is where new customers come from. The fourth score, visibility, is a live read of your public website.",
-        "When you finish, you leave an email and then see your band, your four scores and three suggestions in each section. The four bands are Early, Forming, Ready and Running. You can also book a thirty-minute working session if you want one."
+        "The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.",
+        "When you finish, you leave an email. It gives you next steps for your business. You see three suggestions in each section, and you can book a thirty-minute working session if you want one."
       ],
       "sections": [
         {
-          "q": "What does the Readiness Check measure?",
+          "q": "What does the Readiness Check ask about?",
           "a": [
-            "Four things. Pressure is the work that slows you down and what it costs. Readiness is whether your data, your workflow, the owner and the decision can carry a system. Growth is where new customers come from and whether you control that path. Visibility is how easily answer engines can find and quote your site."
+            "It asks about four areas. First is the work that slows you down and what it costs. Next is whether your data, your workflow, the owner and the decision can carry a system. Then it asks where new customers come from. Last, it reads how easily answer engines can find and quote your site."
           ]
         },
         {
           "q": "How is it different from an AI readiness assessment?",
           "a": [
-            "An AI readiness assessment is the general idea: a structured look at how ready a business is for AI. AWS describes one as a look at data, technology, processes and people. The Readiness Check is our own version. It adds a growth score and a live read of your website, and it ends with next steps."
+            "An AI readiness assessment is the general idea: a structured look at how ready a business is for AI. AWS describes one as a look at data, technology, processes and people. The Readiness Check is our own version. It also asks where new customers come from and reads your website. It gives you next steps for your business."
           ]
         },
         {
@@ -877,11 +877,11 @@
         },
         {
           "question": "Do I need a website to take the Readiness Check?",
-          "answer": "The last scored question asks for a public website so the check can read it. If that read fails, you still get the rest of the report."
+          "answer": "Near the end, the check asks for a public website so it can read it. If that read fails, you still get the rest of the report."
         },
         {
           "question": "What happens after I finish the Readiness Check?",
-          "answer": "You leave an email, then see your scores, three suggestions in each section and a way to book a thirty-minute working session."
+          "answer": "You leave an email. Then you see your next steps, with three suggestions in each section, and a way to book a thirty-minute working session."
         }
       ],
       "related": [
@@ -916,7 +916,7 @@
       "notMatch": [],
       "verified": "2026-10-25",
       "draft": "Abracadabra's five-to-seven-minute questionnaire. It scores data, process, people and the decision, gives a band and tips, and offers a thirty-minute working session.",
-      "changes": "Checked against the live check page and the check's own scoring config. Added the four scores and the four bands, and that you leave an email before you see results. Kept the five-to-seven-minute length and the thirty-minute session. Never says the check costs nothing."
+      "changes": "Checked against the live check page. Client Services later asked that the site make no score promises, so the entry now says the check gives you next steps for your business, with no scores or bands. Kept the five-to-seven-minute length, the email step and the thirty-minute session. Never says the check costs nothing."
     },
     {
       "term": "AI citation",
@@ -1187,7 +1187,7 @@
         },
         {
           "question": "Can I check my AI visibility?",
-          "answer": "Yes, in part. Ask the AI tools your buyers use the questions they ask, and note whether you show up. The visibility score in our Readiness Check is a live read of how well answer engines can find and quote your public site."
+          "answer": "Yes, in part. Ask the AI tools your buyers use the questions they ask, and note whether you show up. Our Readiness Check also does a live read of how well answer engines can find and quote your public site."
         },
         {
           "question": "Does llms.txt improve AI visibility in Google?",

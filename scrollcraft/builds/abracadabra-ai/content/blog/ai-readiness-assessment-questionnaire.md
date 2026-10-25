@@ -2,12 +2,12 @@
 title: "AI Readiness Assessment Questionnaire: The Themes"
 description: "Ask about data, process, people, and the decision before you ask about a tool. A public checklist does not publish a readiness rate for small firms."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "ai readiness assessment questionnaire"
 author: abracadabra-studio
-cta: "Themes are not a score. The Readiness Check returns the band."
+cta: "Themes come first. Then the Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/ai-readiness-assessment-questionnaire/01.webp
     file: ai-readiness-assessment-questionnaire-01.jpg
@@ -52,7 +52,7 @@ An AI readiness questionnaire should bring four themes into the open before anyo
 
 NIST groups the risk work into four parts, which are Govern, Map, Measure, and Manage.[^nist] We are not asking a small firm to build a risk program with those labels on the door. We are asking the questionnaire to cover the same ground in plain speech. Govern is who gets to decide, and Map is what the job really is. Measure is how you would know the output is wrong. And Manage is what you do when it is. A questionnaire that cannot find those four ideas, even in simpler words, is really a sales form.
 
-The [framework](/blog/ai-readiness-framework) is how we score the answers, and the [assessment](/blog/ai-readiness-assessment) is the longer reading. The [growth guide](https://check.abra-ca-dabra.app/check/guide/growth) is what the check offers after the score. Themes come first, and a band comes after that. A tool comes last, and sometimes it does not come at all.
+The [framework](/blog/ai-readiness-framework) is how we score the answers, and the [assessment](/blog/ai-readiness-assessment) is the longer reading. The [growth guide](https://check.abra-ca-dabra.app/check/guide/growth) is what the check offers once you have answers. Themes come first, and next steps come after that. A tool comes last, and sometimes it does not come at all.
 
 We like a short questionnaire because length feels thorough and often hides the blank. An owner may answer a long run of soft questions and still not say where the record lives. When that happens, the form has dodged the only question that mattered. We would rather ask four blunt questions that are allowed to be answered with "we do not know."
 
@@ -72,7 +72,7 @@ Ask where the one place the facts live is for the job. Ask which step is written
 
 Say them in the language of the job, or they stay abstract. The question "Where do the facts live?" becomes a plainer one about a real call. When a customer calls about the thing we promised, which page does the person on the phone open? The question about habit becomes a different one. What do we do when the usual person is out, and is that written anywhere a new hire could find? The question about rejecting becomes a third one. Who is allowed to say that this message does not go to the customer? Then the question about what we will stop becomes a last one. If this works, which notebook can we close for good?
 
-A questionnaire that cannot survive that translation is still just a theme list. Themes are not a score, because they are the questions you refuse to skip. We send people to the growth guide once a real score exists. By then the next move is about getting better at the job and not about collecting more questions. Please do not open that guide to avoid the four questions, and open it only after you have answers you can stand behind.
+A questionnaire that cannot survive that translation is still just a theme list. Themes are not a score, because they are the questions you refuse to skip. We send people to the growth guide once real answers exist. By then the next move is about getting better at the job and not about collecting more questions. Please do not open that guide to avoid the four questions, and open it only after you have answers you can stand behind.
 
 <!--image:3-->
 
@@ -94,7 +94,7 @@ Who can reject the output? This is the question that makes the room go quiet, an
 
 What will they stop doing if the answer is weak? The owner wants to stop repeating the same parking notes, and that is a real stop. The dispatcher wants to stop rebuilding the day from scratch each morning, which is also real. The lead wants to stop arriving without the part. If the questionnaire cannot connect a tool to one of those stops, the tool is only a hobby. So we write the stop next to the blank and let the blank carry a cost they can feel.
 
-We do not end this example with a score, because themes are not a score. The [framework](/blog/ai-readiness-framework) is where those answers get words like absent or partial. And the [assessment](/blog/ai-readiness-assessment) is where a band gets explained. What this conversation produced is a form with blanks the owner cannot talk her way out of. That makes it a finished questionnaire, and a finished sale would have been a different meeting and a worse one.
+We do not end this example with a score, because themes are not a score. The [framework](/blog/ai-readiness-framework) is where those answers get words like absent or partial. And the [assessment](/blog/ai-readiness-assessment) is where the next steps get explained. What this conversation produced is a form with blanks the owner cannot talk her way out of. That makes it a finished questionnaire, and a finished sale would have been a different meeting and a worse one.
 
 ## How we'd run it
 
@@ -106,7 +106,7 @@ Third we ask each person on their own before we let them repair each other's ans
 
 Fourth we match the answers to Govern, Map, Measure. And Manage without making anyone say those words out loud. Who decides is Govern, and the steps of the booked job are Map. How the lead would know the morning text is wrong is Measure. And what the dispatcher does when it is wrong is Manage. If one of those is missing, the questionnaire is not done, no matter how many other boxes are ticked.
 
-Fifth we decide whether a score is even useful yet. If the facts still live in three different places, a band will only decorate the confusion, so we stay with the questions. If the four themes have answers we can point at, we move to the check and then to the growth guide. That guide is about what to do once you know where you stand, and it is not a way to skip the form.
+Fifth we decide whether a score is even useful yet. If the facts still live in three different places, any label will only decorate the confusion, so we stay with the questions. If the four themes have answers we can point at, we move to the check and then to the growth guide. That guide is about what to do once you know where you stand, and it is not a way to skip the form.
 
 We keep the session short enough that the lead is not late to a job and the dispatcher is not dispatching from the hallway. A questionnaire filled in by the owner alone on a Sunday night will be complete and also made up. The person who does the step has to be in the room.
 

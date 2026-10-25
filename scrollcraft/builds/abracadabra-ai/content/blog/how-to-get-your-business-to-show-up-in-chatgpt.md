@@ -2,12 +2,12 @@
 title: "How to Show Up in ChatGPT and AI Overviews"
 description: "Showing up in ChatGPT search is a crawler and indexing problem. Google still treats answer-engine advice as ordinary SEO. Clicks fall when a summary appears."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI search visibility"
 cluster: "visibility"
 primaryQuery: "how to get your business to show up in chatgpt"
 author: abracadabra-studio
-cta: "The visibility guide reads the site. The Readiness Check reads the business."
+cta: "The visibility guide reads the site. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.webp
     file: how-to-get-your-business-to-show-up-in-chatgpt-01.jpg

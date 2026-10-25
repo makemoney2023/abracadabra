@@ -4,6 +4,11 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Readiness Check copy (2026-10-25)
+
+- **What changed**: Client Services asked that the site never promise a Readiness Check score. Every mention of what the check gives you now uses their line, "It gives you next steps for your business." Scores, bands, band names and band ranges were taken out of the glossary (Readiness Check, AI readiness, AI visibility), sixteen blog posts and their CTAs, `llms.txt`, the chat widget's Readiness Check card and the chat's site knowledge. Two links to a check page that no longer exists (`/band/forming`) now go to the readiness guide.
+- **Guard**: `scripts/readiness-copy.mjs` finds a sentence that names the Readiness Check (or "the check" on a page that names it) and talks about a score, a band or a band name, plus the next sentence when it carries on about the check. `npm run build` fails on any hit in a built page, meta tag, JSON-LD block, RSS or llms file, and `tests/readiness-copy.test.mjs` checks the same rule on sources, the widget and the chat knowledge. The privacy notice's line about how the check stores and scores your answers is allowed on purpose.
+
 ## Glossary, batch 2 (2026-10-25)
 
 - **What changed**: ten more terms, all from `content/glossary.json` with no new page code: Readiness Check, AI citation, business process automation (BPA), custom software, AI visibility, generative AI, workflow, answer engine, crawler, HQ. The index (A to Z and "Terms by topic") and related terms on batch 1 pages pick them up.

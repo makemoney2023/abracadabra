@@ -2,12 +2,12 @@
 title: "An AI Implementation Framework in Five Stages"
 description: "Name the job, score the data, write the process, assign a checker, then keep or stop. Surveys show use is common and scaling is not."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "ai implementation framework"
 author: abracadabra-studio
-cta: "Stop at the stage you cannot finish. The check shows which one."
+cta: "Stop at the stage you cannot finish. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/ai-implementation-framework/01.webp
     file: ai-implementation-framework-01.jpg
@@ -49,7 +49,7 @@ citations:
 ---
 An AI implementation framework is the order of work you follow once the job already has a name. NIST calls the risk side of that work Govern, Map, Measure, and Manage.[^nist] We use five stages in plain words, because that is how the talk goes when we sit down with an owner. First we name the job. Then we score the data and write the process. After that we pick a checker, and last we keep the work or stop it.
 
-Most small firms we meet are still in the [Forming band](https://check.abra-ca-dabra.app/band/forming) while those stages are unfinished. A tool is open on someone's laptop and the rest is a hope. A hope is not a stage, and if you skip one you get the stall we describe in the [stall note](/blog/why-ai-pilots-stall). The score that should come before any build is in the [readiness framework](/blog/ai-readiness-framework). This note covers only the order of work after that score exists.
+Most small firms we meet are still [partly ready](https://check.abra-ca-dabra.app/check/guide/readiness) while those stages are unfinished. A tool is open on someone's laptop and the rest is a hope. A hope is not a stage, and if you skip one you get the stall we describe in the [stall note](/blog/why-ai-pilots-stall). The owner's own read, which should come before any build, is in the [readiness framework](/blog/ai-readiness-framework). This note covers only the order of work after that read exists.
 
 We like a plain, slow order, but most owners like a demo. A demo feels like progress because someone in the room finally relaxes. An order feels like a delay because it is only a list. The list is the work, though, and a framework you cannot walk through on one page is just a brochure. A brochure will not run your business on Monday morning.
 
@@ -123,4 +123,4 @@ We would not aim a clinic at the Cisco pacesetter share. Near 13% of a sample of
 
 We would keep the old reminder running beside the draft until the manager trusts what she reads. Sellers dislike that, because it makes their product look optional. It still costs less than a week of apologies. When she trusts the draft, we turn the old way off in a sentence the staff can hear. That way nobody keeps doing both in secret.
 
-If a tool is already on your card statement, please do not ask us to make it sound bigger than it is. Ask which stage you cannot finish. A fuzzy job goes back to the [readiness framework](/blog/ai-readiness-framework). A charming demo followed by a bad Monday belongs with the [stall note](/blog/why-ai-pilots-stall). A habit that is still forming can sit in the [Forming band](https://check.abra-ca-dabra.app/band/forming) until the checker has a name. That is a perfectly respectable place to be.
+If a tool is already on your card statement, please do not ask us to make it sound bigger than it is. Ask which stage you cannot finish. A fuzzy job goes back to the [readiness framework](/blog/ai-readiness-framework). A charming demo followed by a bad Monday belongs with the [stall note](/blog/why-ai-pilots-stall). A habit that is still forming can stay [partly ready](https://check.abra-ca-dabra.app/check/guide/readiness) until the checker has a name. That is a perfectly respectable place to be.
