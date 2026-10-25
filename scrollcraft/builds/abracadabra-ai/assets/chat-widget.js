@@ -1404,8 +1404,8 @@ export class AbraChat extends ElementBase {
     const card = el("div", "card booked");
     card.dataset.readinessResult = "true";
     card.append(
-      el("p", "kicker", "Readiness Check · scored"),
-      el("h3", null, `${data.band?.label || "Scored"}.`),
+      el("p", "kicker", "Readiness Check · your stage"),
+      el("h3", null, `${data.band?.label || "Finished"}.`),
     );
     if (data.band?.sentence) card.append(el("p", null, data.band.sentence));
     card.append(el("p", "fine", "The full report opens on the check site. It asks for your email, then shows your next steps, with three suggestions in each section."));
@@ -1419,7 +1419,7 @@ export class AbraChat extends ElementBase {
     card.append(report, book);
     this.stream.append(card);
     this.stream.scrollTop = this.stream.scrollHeight;
-    this.status.textContent = `Readiness Check scored: ${data.band?.label || "done"}.`;
+    this.status.textContent = `Readiness Check finished: ${data.band?.label || "done"}.`;
   }
 
   showBookingCard() {

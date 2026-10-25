@@ -45,7 +45,7 @@ export function stepView(stepId, answered = 0) {
 
 export function bandView(band) {
   const known = READINESS.bands[band];
-  return known ? { id: band, label: known.label, sentence: known.sentence } : { id: String(band || ""), label: "Scored", sentence: "" };
+  return known ? { id: band, label: known.label, sentence: known.sentence } : { id: String(band || ""), label: "Finished", sentence: "" };
 }
 
 /** Answers are checked for shape here; the check validates them again. */

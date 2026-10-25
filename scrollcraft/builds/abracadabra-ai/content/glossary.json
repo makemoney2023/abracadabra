@@ -1941,7 +1941,7 @@
       "category": "AI readiness and strategy",
       "priority": "Med",
       "clientFlag": null,
-      "draft": "The label a readiness score falls in, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
+      "draft": "The stage name the Readiness Check gives a business, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
       "mentions": 9,
       "sources": [
         "/blog/ai-readiness-framework",

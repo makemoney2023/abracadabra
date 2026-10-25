@@ -792,7 +792,7 @@
     {
       "row": "ai_visibility",
       "said": "You do not know if AI answer engines can find you.",
-      "build": "A scan of how readable the site is to answer engines, and the fixes that move the score. pirx.ca went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days. Google Search Console, Jul 18 to Oct 17, 2026, recorded 398K search impressions and 1.94K clicks.",
+      "build": "A scan of how readable the site is to answer engines, and the fixes that make it easy for them to read. pirx.ca went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days. Google Search Console, Jul 18 to Oct 17, 2026, recorded 398K search impressions and 1.94K clicks.",
       "specimens": [
         {
           "name": "Schema",
