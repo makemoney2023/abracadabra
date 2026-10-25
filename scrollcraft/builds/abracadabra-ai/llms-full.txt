@@ -379,11 +379,11 @@ https://abra-ca-dabra.app/glossary/machine-learning/
 
 ### Readiness Check
 
-The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.
+The Readiness Check is our online check for a business that wants to put AI to work. It takes five to seven minutes. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business.
 
 The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.
 
-When you finish, you leave an email. It gives you next steps for your business. You can also book a thirty-minute working session if you want one.
+When you finish, you leave an email. Then you see your scores for readiness, growth and website visibility, and the stage your business is at. It gives you next steps for your business. You can also book a thirty-minute working session if you want one.
 
 https://abra-ca-dabra.app/glossary/readiness-check/
 
@@ -855,14 +855,14 @@ We draw that line on purpose. A diagnosis says what is wrong with you. A route s
 
 ## What the check gives you
 
-The Readiness Check asks about the same four parts as this note. (Abracadabra AI) It gives you next steps for your business. The step depends on where the work stands today.
+The Readiness Check asks about the same four parts as this note. (Abracadabra AI) It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. The step depends on where the work stands today.
 
 - If the work that matters still lives in people's heads, the first useful step is to write one job down and name who owns it.
 - If parts of the work are written down, a named owner and one place for the facts can turn that into something a team can run.
 - If the business can put a new tool to work, the open question is which job to start with and who owns it day to day.
 - If a real job already uses the tools, the next gain is the job that still waits on one person.
 
-A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
+A next step tells you where to look today. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
 
 When the know-how is still in people's heads, you write one job down and name the owner before you shop. When the writing is only partial, two pieces are often missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 
@@ -874,7 +874,7 @@ The next note looks at [how surveys count AI in small businesses](https://abra-c
 
 ## A worked example
 
-Say we are in a small physiotherapy clinic after the last patient has gone home. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, and it is not a clinic we measured.
+Say we are in a small physiotherapy clinic after the last patient has gone home. One person runs the front desk. One clinician sees most of the repeat visits.
 
 … Full post: https://abra-ca-dabra.app/blog/ai-readiness-assessment
 
@@ -962,7 +962,7 @@ The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) is 
 
 ## What the check adds
 
-The Readiness Check asks about the same four groups. (Abracadabra AI) It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
+The Readiness Check asks about the same four groups. (Abracadabra AI) It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
 
 Read the result as a shape and not as a medal. Sometimes the work that matters still lives in people's heads. Sometimes some of it is written down, but nobody clearly owns it. Sometimes you could put a system on the job without making up the job at the same time. And sometimes the tools already do real work, and the leftover pain is the task everyone still hands to one person. A result without those sentences is just a label. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
 
@@ -992,7 +992,7 @@ First, data. The special-order book is a paper notebook in the kitchen. The fron
 
 Next, process. The usual path is real. An email comes in, the kitchen lead checks the book, the owner sets a price, and the front lead replies. The exception is a customer who changes the head count the day before, or a date the kitchen lead half promised on the phone. Nobody wrote that down, so process is partial. The usual path is not the whole process. If we scored it in place, the tool would invent the head count change and sound sure about it.
 
-Then people. The front lead already drafts replies in a personal account when she falls behind, and then she pastes them into the inbox. The owner did not know that customer words were being drafted somewhere else. Nobody is named as the person who may send, and nobody is named as the person who may block a send.
+Then people. The front lead already drafts replies in a personal account when she falls behind, and then she pastes them into the inbox. The owner did not know that customer words were being drafted somewhere else.
 
 … Full post: https://abra-ca-dabra.app/blog/ai-readiness-framework
 
@@ -1352,7 +1352,7 @@ Ask for them on the piece in your space. HQ opens a new card called Changes requ
 
 This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are [custom apps](https://abra-ca-dabra.app/services/custom-apps/), and some are [AI assistants and agents](https://abra-ca-dabra.app/services/ai-assistants-and-agents/). You can see more of what we have shipped in our [portfolio](https://abra-ca-dabra.app/portfolio/). If you want to see HQ itself, including how approved work reaches a social calendar, read the [HQ product page](https://abra-ca-dabra.app/products/hq/). And if agents are new to you, [What Is an AI Agent? A Plain Answer for Owners](https://abra-ca-dabra.app/blog/what-is-an-ai-agent) is a good place to start.
 
-The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today. It gives you next steps for your business. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
+The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. Take it, then [start a project](https://abra-ca-dabra.app/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
 
 Sources
 1. Google Search's guidance about AI-generated content — Google Search Central, 2023-02-08 — https://developers.google.com/search/blog/2023/02/google-search-and-ai-content
@@ -1475,7 +1475,7 @@ Ready means the data, the process, the people, and the decision can carry a tool
 
 A business is ready for AI when one named job can move to a tool without anyone inventing the process along the way. Ready is not a mood, and it is not a purchase. It describes the data, the process, the people, and the decision around that one job. If any one of those four is still a shrug, then the job is not ready yet.
 
-The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about these same signs. (Abracadabra AI) It gives you next steps for your business. Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Not ready yet is allowed to be the true state. Plenty of good businesses are not ready on the job they just tried to automate, and they are fine at the rest of their work.
+The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about these same signs. (Abracadabra AI) It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business. Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Not ready yet is allowed to be the true state. Plenty of good businesses are not ready on the job they just tried to automate, and they are fine at the rest of their work.
 
 The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) spells out those states in full sentences. The [assessment note](https://abra-ca-dabra.app/blog/ai-readiness-assessment) compares the public tools side by side. Read the guide when you want the exact wording. Read this note when you want to know which signs to trust before a vendor tells you what the signs are.
 
@@ -1507,7 +1507,7 @@ Walk the good signs. Is there one place the facts live, and does it have a name?
 
 Are the steps written down? The sunny path is written, and it goes car in, inspect, call, approve, repair, car out. The exceptions are not written. What if the customer does not answer and the bay is needed? What if the lead tech finds a second problem after the yes? What if the ticket writer is off and the other writer does not know the lead tech's shorthand? Those are unwritten exceptions, and that is the second bad sign.
 
-Does a person own the output? The vendor's tool would send a text, and the ticket writer assumes he would glance at it. The lead tech says she would not see it until the customer called angry.
+Does a person own the output? The vendor's tool would send a text, and the ticket writer assumes he would glance at it.
 
 … Full post: https://abra-ca-dabra.app/blog/is-my-business-ready-for-ai
 

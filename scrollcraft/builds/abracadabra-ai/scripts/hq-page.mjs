@@ -24,7 +24,7 @@ export const hqFaqs = [
   ["Does anything reach me or my social networks without approval?", "No. Work an agent files is held until it has been reviewed and released. Only finished work you have approved can be scheduled or posted."],
   ["Which social networks does HQ post to?", `${NETWORKS.slice(0, -1).join(", ")} and ${NETWORKS.at(-1)}. Your accounts connect through each network's own sign-in.`],
   ["What are digital workers?", "AI agents we set up for your business, each with a clear role. They work from cards on your board, use skills picked for each task, and file their work for review."],
-  ["How do I get started?", "Take the Readiness Check, a five-to-seven-minute questionnaire about how your business runs today. It gives you next steps for your business, and you can book a thirty-minute working session if you want one."],
+  ["How do I get started?", "Take the Readiness Check, a five-to-seven-minute questionnaire about how your business runs today. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business, and you can book a thirty-minute working session if you want one."],
 ];
 
 const flowSteps = [
@@ -155,7 +155,7 @@ ${faq}
 </section>
 
 <section class="product-page__next premium-cta hq-cta">
-${sectionHeading("Start here", "See where your business stands first.", "The Readiness Check is a five-to-seven-minute questionnaire about how your business runs today. It gives you next steps for your business.")}
+${sectionHeading("Start here", "See where your business stands first.", "The Readiness Check is a five-to-seven-minute questionnaire about how your business runs today. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business.")}
 ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project")}
 </section>
 </main>`;

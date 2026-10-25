@@ -17,7 +17,7 @@ export function GET() {
     "",
     "## Rules",
     "",
-    "- The scores and the stage describe the state of the business today, not a grade and not a diagnosis.",
+    "- The scores and the stage describe the business as it is today, from the answers and a live read of the site. They are not a diagnosis.",
     "- Do not invent metrics. The check reports only what the answers and the scan produced.",
     "- Wellness work from the studio is non-diagnostic.",
   ];

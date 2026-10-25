@@ -97,20 +97,20 @@ test("data-flow diagram exports exist", () => {
 
 const SCHEDULING = "Once a piece is approved and your accounts are connected, it is scheduled into your next open slot.";
 
-test("HQ page and homepage section promise no score, and use the agreed scheduling sentence", () => {
+test("HQ page and homepage section promise no band or tips, and use the agreed scheduling sentence", () => {
   const page = read("products/hq/index.html");
   const home = read("index.html");
   const section = home.match(/<section id="hq"[\s\S]*?<\/section>/)[0];
   for (const [name, html] of [["page", page], ["home section", section]]) {
     const text = strip(html).replace(/’/g, "'");
-    assert.doesNotMatch(text, /\bscores?\b|\bscored\b|\bband\b|\btips\b/i, `${name}: no score, band or tips promise`);
+    assert.doesNotMatch(text, /\bband\b|\btips\b/i, `${name}: no band or tips promise (scores are allowed since #227)`);
     assert.doesNotMatch(text, /approving (a|the) piece takes|takes the next (open|free) slot/i, `${name}: old slot wording`);
     assert.doesNotMatch(text, /before it posts|move or remove/i, `${name}: no unverified move/remove claim`);
   }
   assert.ok(strip(page).includes(SCHEDULING), "page carries the scheduling sentence");
   assert.ok(strip(section).includes(SCHEDULING), "home section carries the scheduling sentence");
   const ld = JSON.stringify(graph(page));
-  assert.doesNotMatch(ld, /\bscores?\b|next open slot on your calendar|approving a piece/i);
+  assert.doesNotMatch(ld, /next open slot on your calendar|approving a piece/i);
   assert.ok(ld.includes("It gives you next steps for your business"));
   assert.ok(strip(page).includes("It gives you next steps for your business."));
   assert.ok(!/free|brief|zernio/i.test(strip(page) + ld), "no free, brief or vendor name");

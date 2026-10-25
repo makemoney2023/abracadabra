@@ -79,7 +79,7 @@ When a product already on the market does the job, the reply says so and points 
 - [About](https://abra-ca-dabra.app/about/): Who we are and how we work.
 - [Privacy](https://abra-ca-dabra.app/privacy): How we handle information.
 - [Start a project](https://abra-ca-dabra.app/start/): Write houdini@ or use the form; contact houdini@abra-ca-dabra.app.
-- [Readiness Check](https://check.abra-ca-dabra.app/check): Five-to-seven-minute check of a business. It gives you next steps for your business.
+- [Readiness Check](https://check.abra-ca-dabra.app/check): Five-to-seven-minute check of a business. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business.
 - [Schema](https://schema.abra-ca-dabra.app/): Scores how visible a site is to answer engines and generates the repair.
 
 ## Glossary
@@ -102,7 +102,7 @@ When a product already on the market does the job, the reply says so and points 
 - [Large language model (LLM)](https://abra-ca-dabra.app/glossary/large-language-model/): A large language model (LLM) is an AI model trained on a huge amount of text. It writes by predicting the next word, or part of a word, over and over. Google's Gemini and OpenAI's GPT models are examples.
 - [llms.txt](https://abra-ca-dabra.app/glossary/llms-txt/): llms.txt is a proposed file, written in Markdown, that gives AI tools a short summary of a website and links to its most useful pages. It usually sits at the site's root, at /llms.txt. Google Search says it does not use the file.
 - [Machine learning](https://abra-ca-dabra.app/glossary/machine-learning/): Machine learning is a way to build software that learns patterns from past data. It does not rely only on rules a person wrote. The trained model can then make predictions about new data, such as next month's orders.
-- [Readiness Check](https://abra-ca-dabra.app/glossary/readiness-check/): The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.
+- [Readiness Check](https://abra-ca-dabra.app/glossary/readiness-check/): The Readiness Check is our online check for a business that wants to put AI to work. It takes five to seven minutes. It scores readiness, growth and website visibility, and names the stage your business is at. It gives you next steps for your business.
 - [Schema markup and JSON-LD](https://abra-ca-dabra.app/glossary/schema-markup-json-ld/): Schema markup is code added to a web page that labels what the page is about, such as an article, a product or a business. The labels come from a shared list called schema.org. JSON-LD is the format Google recommends for it. It is a block of code that machines read and visitors do not see.
 - [Workflow](https://abra-ca-dabra.app/glossary/workflow/): A workflow is the set of steps that takes a piece of work from start to finish, in a set order. In AI, it also means a system where an AI model and tools follow steps written in code ahead of time. That is different from an AI agent, which picks its own next step.
 

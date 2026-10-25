@@ -79,7 +79,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "kind": "stage",
     "title": "What does the Early stage mean?",
     "answer": "The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it.",
-    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "strong": "The stage describes the business today, next to its scores for readiness, growth and website visibility. It is not a diagnosis.",
     "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
@@ -93,7 +93,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "kind": "stage",
     "title": "What does the Forming stage mean?",
     "answer": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build.",
-    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "strong": "The stage describes the business today, next to its scores for readiness, growth and website visibility. It is not a diagnosis.",
     "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
@@ -107,7 +107,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "kind": "stage",
     "title": "What does the Ready stage mean?",
     "answer": "The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day.",
-    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "strong": "The stage describes the business today, next to its scores for readiness, growth and website visibility. It is not a diagnosis.",
     "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {
@@ -121,7 +121,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "kind": "stage",
     "title": "What does the Running stage mean?",
     "answer": "A real workflow already uses the tools. The next gain is the job that still waits on one person.",
-    "strong": "The stage describes the business today. It is not a grade and it is not a diagnosis.",
+    "strong": "The stage describes the business today, next to its scores for readiness, growth and website visibility. It is not a diagnosis.",
     "first": "Read the next steps on your results and do the first one before you book anything.",
     "faq": [
       {

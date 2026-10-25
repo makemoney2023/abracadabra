@@ -173,7 +173,7 @@ export async function buildKnowledge() {
     "GLOSSARY: checked, plain definitions of AI and search terms live at /glossary/, one page per term. A GLOSSARY ENTRY block below this list, when present, holds the definition and page for a term the visitor named.",
     `PROCESS: ${process.join(" ")}`,
     "COST: Priced to the project. Tell us what you need and we'll quote it. Never give a number.",
-    "NEXT STEPS (options, not a closing line: offer one only when the visitor asks about cost, timing, getting started, or talking to a person): a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",
+    "NEXT STEPS (options, not a closing line: offer one only when the visitor asks about cost, timing, getting started, or talking to a person): a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines. It scores readiness, growth and website visibility, names the stage the business is at, and gives next steps for the business.",
     "WHY CLOUDFLARE:",
     ...CLOUDFLARE.map((line) => `- ${line}`),
   ];
@@ -187,8 +187,15 @@ export async function buildKnowledge() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const { text, version, work, products, services, paths, glossary } = await buildKnowledge();
   // Christopher, Oct 25: the chat never gives the Readiness Check a fixed tip count ("three suggestions in each section").
-  const { findReadinessCountClaims } = await import(new URL("readiness-copy.mjs", site));
-  const counts = findReadinessCountClaims([text, ...glossary.map((entry) => entry.short)].join("\n"));
+  // Scores are allowed since #227; "free" never is.
+  const { findReadinessCountClaims, findReadinessFreeClaims } = await import(new URL("readiness-copy.mjs", site));
+  const knownText = [text, ...glossary.map((entry) => entry.short)].join("\n");
+  const free = findReadinessFreeClaims(knownText);
+  if (free.length) {
+    console.error(`Site knowledge calls the Readiness Check free; never say free:\n${free.join("\n")}`);
+    process.exit(1);
+  }
+  const counts = findReadinessCountClaims(knownText);
   if (counts.length) {
     console.error(`Site knowledge gives the Readiness Check a tip count; drop it ("It gives you next steps for your business."):\n${counts.join("\n")}`);
     process.exit(1);
