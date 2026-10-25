@@ -12,8 +12,9 @@ export type BookingPrefill = {
 };
 
 /**
- * What a visitor sees: a stage name and next steps for their business. The numeric scores stay on the
- * stored check (and in HQ for staff); nothing in this payload carries a number from the scoring.
+ * What a visitor sees: the scores (overall, readiness with its four pillars, growth, website visibility),
+ * a stage name with its sentence, and next steps for their business. `stage` and `bandLabel`/`bandSentence`
+ * carry the same band; the band fields keep the pre-stage API shape for anything that still reads them.
  */
 export type StageView = { id: string; label: string; sentence: string };
 
@@ -21,13 +22,21 @@ export type PressureView = { code: string; label: string; severityLabel: string 
 
 export type ResultsPayload = {
   domain: string | null;
+  scores: AssessmentScores;
+  bandLabel: string;
+  bandSentence: string;
   stage: StageView;
   topPressureLabel: string | null;
   pressures: PressureView[];
   suggestions: Record<"readiness" | "growth" | "visibility", Suggestion[]>;
   offers: Offer[];
   visibility: { status: AssessmentScores["visibility"]["status"] };
-  scan: { token: string; status: string } | null;
+  scan: {
+    token: string;
+    status: string;
+    scoreTotal: number | null;
+    breakdown: unknown;
+  } | null;
   booking: BookingPrefill;
   appointment?: { startsAt: string; status: string };
 };
@@ -38,9 +47,19 @@ export type AssessmentPayload = {
   answers: Answers;
   qualifiers: Record<string, unknown>;
   gated: boolean;
-  preview?: { stage: string; stageLabel: string };
+  /** The gate shows the stage name only; the scores come with the results after the email. */
+  preview?: { stage: string; stageLabel: string; band: string; bandLabel: string };
   results?: ResultsPayload;
 };
+
+/**
+ * "The job that costs the most right now: <label>." Pressure labels are full sentences that already end
+ * with a period, so strip trailing punctuation before adding ours (no "gets done..").
+ */
+export function costliestJobSentence(label: string | null | undefined): string {
+  const trimmed = (label ?? "").replace(/[.\s]+$/, "");
+  return trimmed ? `The job that costs the most right now: ${trimmed}.` : "";
+}
 
 export function buildBooking(input: {
   calLink: string | null | undefined;
@@ -81,7 +100,7 @@ export function selectAssessmentPayload(input: {
   name: string | null;
   domain: string | null;
   config: AssessmentConfig;
-  scan: (SuggestionScan & { token: string }) | null;
+  scan: (SuggestionScan & { token: string; scoreTotal: number | null; breakdown: unknown }) | null;
   calLink?: string | null;
   appointment?: { startsAt: string; status: string };
 }): AssessmentPayload {
@@ -95,7 +114,7 @@ export function selectAssessmentPayload(input: {
   if (!input.scores) return base;
   const band = bandFor(input.scores.overall.total, input.config);
   if (!input.optedIn) {
-    return { ...base, preview: { stage: band.id, stageLabel: band.label } };
+    return { ...base, preview: { stage: band.id, stageLabel: band.label, band: band.id, bandLabel: band.label } };
   }
   const pressureQuestion = questionById("pressure", input.config);
   const top = input.scores.topPressure;
@@ -107,6 +126,9 @@ export function selectAssessmentPayload(input: {
   }));
   const results: ResultsPayload = {
     domain: input.domain,
+    scores: input.scores,
+    bandLabel: band.label,
+    bandSentence: band.sentence,
     stage: { id: band.id, label: band.label, sentence: band.sentence },
     topPressureLabel: topLabel,
     pressures,
@@ -118,7 +140,14 @@ export function selectAssessmentPayload(input: {
     }),
     offers: mapPressuresToOffers({ pressures: input.scores.pressures, config: input.config }),
     visibility: { status: input.scores.visibility.status },
-    scan: input.scan ? { token: input.scan.token, status: input.scan.status } : null,
+    scan: input.scan
+      ? {
+          token: input.scan.token,
+          status: input.scan.status,
+          scoreTotal: input.scan.scoreTotal,
+          breakdown: input.scan.breakdown,
+        }
+      : null,
     booking: buildBooking({
       calLink: input.calLink,
       token: input.token,

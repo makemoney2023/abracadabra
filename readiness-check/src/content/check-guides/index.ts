@@ -32,7 +32,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "slug": "readiness",
     "kind": "section",
     "title": "Could AI do real work here?",
-    "answer": "Readiness looks at four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. Where you are today is a state, not a grade.",
+    "answer": "Readiness scores four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. A low score is a state, not a grade.",
     "strong": "Strong looks like one system of record, a written workflow someone owns, a named day-to-day owner, and a decision inside the month.",
     "first": "Write the core workflow on one page before you buy or build anything.",
     "furtherReading": {
@@ -42,7 +42,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "faq": [
       {
         "q": "Could AI do real work here?",
-        "a": "Readiness looks at four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. Where you are today is a state, not a grade."
+        "a": "Readiness scores four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. A low score is a state, not a grade."
       }
     ]
   },

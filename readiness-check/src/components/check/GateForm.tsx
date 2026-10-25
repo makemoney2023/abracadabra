@@ -33,7 +33,7 @@ export function GateForm({
         setError(data.message ?? data.error ?? "Could not send the report. Try again.");
         return;
       }
-      if (!data.results?.stage) {
+      if (!data.results?.stage || !data.results?.scores) {
         setError("Your results did not come back. Try again.");
         return;
       }

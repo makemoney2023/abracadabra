@@ -854,7 +854,7 @@
   ],
   "copy": {
     "landingTitle": "Is your business ready to put AI to work?",
-    "landingDeck": "A five-to-seven-minute check. You get the stage your business is at today and next steps for your business: how the work runs, where new customers come from, and how readable your website is to AI answer engines.",
+    "landingDeck": "A five-to-seven-minute check. You get a score and next steps for how the work runs, where new customers come from, and how readable your website is to AI answer engines, plus the stage your business is at today.",
     "start": "Start the check",
     "gateHeadline": "Your check is done.",
     "gatePrompt": "Where should we send it?",

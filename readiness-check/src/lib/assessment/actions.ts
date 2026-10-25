@@ -82,6 +82,8 @@ function presentAssessment(row: AssessmentRow, scan: ScanRow | null, findings: F
           status: suggestionStatus,
           findings,
           token: scan.public_token,
+          scoreTotal: scan.score_total,
+          breakdown: scan.score_breakdown,
         }
       : null,
     calLink: link,

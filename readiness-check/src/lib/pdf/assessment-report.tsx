@@ -1,5 +1,5 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import type { ResultsPayload } from "@/lib/assessment/present";
+import { costliestJobSentence, type ResultsPayload } from "@/lib/assessment/present";
 import { STUDIO } from "@/lib/brand/studio";
 import { registerStudioPdfFonts } from "@/lib/pdf/fonts";
 
@@ -26,17 +26,36 @@ const styles = StyleSheet.create({
   muted: { color: STUDIO.inkSoft, marginBottom: 12 },
   section: { marginTop: 14, marginBottom: 4, fontSize: 14, color: STUDIO.accent, fontFamily: "Inter Tight", fontWeight: 700 },
   row: { marginBottom: 4, color: STUDIO.ink },
+  next: { marginTop: 6, marginBottom: 4, color: STUDIO.inkSoft, fontFamily: "Inter Tight", fontWeight: 500 },
   rule: { marginTop: 8, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: STUDIO.signal },
 });
 
-const SECTIONS = [
-  ["readiness", "Next steps for how the work runs"],
-  ["visibility", "Next steps for your website"],
-  ["growth", "Next steps for new customers"],
-] as const;
+function visibilityLine(scores: ResultsPayload["scores"]): string {
+  if (scores.visibility.status === "complete" && scores.visibility.total != null) {
+    return `Website visibility ${scores.visibility.total} of 100`;
+  }
+  return scores.visibility.status === "pending" ? "Website visibility: still reading the site" : "Website visibility: the site could not be read this time";
+}
 
-/** The visitor's report: the stage name and next steps. No numeric score is printed. */
+/** The visitor's report: the stage name, the scores, and next steps for each section. */
 export function AssessmentReportDocument({ results }: { results: ResultsPayload }) {
+  const { scores } = results;
+  const costliest = costliestJobSentence(results.topPressureLabel);
+  const sections = [
+    {
+      key: "readiness",
+      heading: `Readiness ${scores.readiness.total} of 100`,
+      detail: [
+        `Data ${scores.readiness.data}`,
+        `Process ${scores.readiness.process}`,
+        `People ${scores.readiness.people}`,
+        `Decision ${scores.readiness.decision}`,
+      ],
+      next: "Next steps for how the work runs",
+    },
+    { key: "visibility", heading: visibilityLine(scores), detail: [], next: "Next steps for your website" },
+    { key: "growth", heading: `Growth ${scores.growth.total} of 100`, detail: [], next: "Next steps for new customers" },
+  ] as const;
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -46,16 +65,19 @@ export function AssessmentReportDocument({ results }: { results: ResultsPayload 
         <View style={styles.rule} />
         <Text style={styles.muted}>
           {results.stage.sentence}
-          {results.topPressureLabel ? ` The job that costs the most right now: ${results.topPressureLabel.replace(/[.\s]+$/, "")}.` : ""}
+          {costliest ? ` ${costliest}` : ""}
         </Text>
         <Text style={styles.row}>Site: {results.domain ?? "not provided"}</Text>
-        {SECTIONS.map(([section, heading]) => (
-          <View key={section}>
-            <Text style={styles.section}>{heading}</Text>
-            {results.suggestions[section].length === 0 ? (
+        <Text style={styles.row}>Overall score {scores.overall.total} of 100</Text>
+        {sections.map((section) => (
+          <View key={section.key}>
+            <Text style={styles.section}>{section.heading}</Text>
+            {section.detail.length > 0 ? <Text style={styles.row}>{section.detail.join(" · ")}</Text> : null}
+            <Text style={styles.next}>{section.next}</Text>
+            {results.suggestions[section.key].length === 0 ? (
               <Text style={styles.row}>Nothing to flag here.</Text>
             ) : (
-              results.suggestions[section].map((item) => (
+              results.suggestions[section.key].map((item) => (
                 <Text key={item.code} style={styles.row}>
                   {item.title} — {item.body}
                 </Text>
