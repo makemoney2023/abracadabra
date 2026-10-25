@@ -68,18 +68,32 @@ export function glossaryPrompt(question, pagePath, { voice = false } = {}) {
   if (onPage && !entries.includes(onPage) && entries.length < MAX_GLOSSARY_ENTRIES) entries.push(onPage);
   if (!entries.length) return "";
   const lines = entries.map((entry) => `- ${entry.term} | ${SITE}${entry.path} | ${entry.short}`);
+  // The whole definition, not a trimmed one: a four-sentence entry lost its last sentence when the prompt said
+  // "at most three sentences". The page link goes last, on the same line as the definition.
   const how = voice
-    ? "answer a question about these terms from them, close to word for word, and say it is on our glossary page"
-    : "answer a question about these terms from them, close to word for word, in at most three sentences, and give the page as the full link shown";
+    ? "answer a question about these terms from them, close to word for word, keep every sentence of the definition, and say it is on our glossary page"
+    : "answer a question about these terms from them, close to word for word, keep every sentence of the definition, and end with the page as the full link shown, after the last sentence of the definition";
   return `\n\nGLOSSARY ENTRY (checked definitions; ${how}):\n${lines.join("\n")}`;
 }
 
-/** Short answer used when the model is down: the definition and its page, only for a "what is X" style question. */
+/** Short answer used when the model is down: the whole definition and its page, only for a "what is X" style question. */
 export function glossaryReply(question) {
   if (!ASKS_MEANING.test(String(question || ""))) return "";
   const [entry] = glossaryMatches(question, 1);
   if (!entry) return "";
-  // Replies are capped at four sentences, so keep at most three of the definition and end with the page.
-  const sentences = entry.short.split(/(?<=[.!?])\s+/).slice(0, 3).join(" ");
-  return `${sentences} More on our glossary page: ${SITE}${entry.path}`;
+  // A bare link after the last sentence does not count as a sentence (postCheck), so the definition stays whole.
+  return `${entry.short} ${SITE}${entry.path}`;
+}
+
+/**
+ * The glossary page link a typed answer should end with, or "". Only for a "what is X" question that names a
+ * glossary term, and only when the answer does not already carry that page. The model sometimes leaves the link
+ * off, and a link it writes on its own line used to be dropped by the sentence checker, so the server adds it.
+ */
+export function glossaryLinkFor(question, answer) {
+  if (!ASKS_MEANING.test(String(question || ""))) return "";
+  const [entry] = glossaryMatches(question, 1);
+  if (!entry) return "";
+  const url = `${SITE}${entry.path}`;
+  return String(answer || "").includes(url) ? "" : url;
 }

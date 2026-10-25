@@ -89,6 +89,11 @@ export function extraOrigins(env) {
 
 export const MAX_SENTENCES = 4;
 
+/** True for a piece of text that is only a link (and closing punctuation). */
+export function isLinkOnly(text) {
+  return /^https?:\/\/\S+$/.test(String(text || "").trim().replace(/[.,;:!?]+$/, ""));
+}
+
 // Links on our own domain must be real pages. The booking and Readiness Check hosts pass as they are.
 const SUBDOMAINS = new Set(["check.abra-ca-dabra.app", "schema.abra-ca-dabra.app", "learn.abra-ca-dabra.app", "hq.abra-ca-dabra.app"]);
 
@@ -107,7 +112,29 @@ export function repairPath(rawPath) {
   const last = dashed.replace(/\/$/, "").split("/").pop();
   if (!last) return null;
   const same = SITE_PATHS.filter((known) => known.replace(/\/$/, "").split("/").pop() === last);
-  return same.length === 1 ? same[0] : null;
+  if (same.length === 1) return same[0];
+  return closestPost(dashed);
+}
+
+const words = (slug) => new Set(slug.split("-").filter((word) => word.length > 1 && !["a", "an", "the", "to", "of", "and", "for", "in", "your", "is", "vs"].includes(word)));
+
+/**
+ * An invented blog slug ("/blog/what-is-an-llms-txt-file") mapped to the one real post that shares most of its
+ * words, or null. A match needs at least two shared words, at least 60% overlap (Jaccard), and a clear winner.
+ */
+export function closestPost(rawPath) {
+  const m = /^\/blog\/([a-z0-9-]+)\/?$/.exec(String(rawPath || ""));
+  if (!m) return null;
+  const want = words(m[1]);
+  if (want.size < 2) return null;
+  const scored = SITE_PATHS.filter((path) => /^\/blog\/[a-z0-9-]+\/$/.test(path)).map((path) => {
+    const have = words(path.slice(6, -1));
+    const shared = [...want].filter((word) => have.has(word)).length;
+    return { path, shared, score: shared / new Set([...want, ...have]).size };
+  }).filter((c) => c.shared >= 2).sort((a, b) => b.score - a.score);
+  if (!scored.length || scored[0].score < 0.6) return null;
+  if (scored[1] && scored[1].score === scored[0].score) return null;
+  return scored[0].path;
 }
 
 export function sitePageKnown(url) {
@@ -123,7 +150,8 @@ export function sitePageKnown(url) {
   }
   let path = parsed.pathname || "/";
   if (path.endsWith("/index.html")) path = path.slice(0, -10);
-  return SITE_PATHS.includes(path) || SITE_PATHS.includes(`${path}/`) || /^\/blog\/[a-z0-9-]+\/?$/.test(path);
+  // Blog posts must be real ones too: an invented /blog/<slug> is repaired or sent to the Notes index (postCheck).
+  return SITE_PATHS.includes(path) || SITE_PATHS.includes(`${path}/`);
 }
 
 export function postCheck(text, { seed = 0, recent = [] } = {}) {
@@ -157,6 +185,8 @@ export function postCheck(text, { seed = 0, recent = [] } = {}) {
         const fixed = repairPath(path);
         if (fixed) return `https://abra-ca-dabra.app${fixed}${tail}`;
         if (path && path !== "/" && sitePageKnown(`https://abra-ca-dabra.app${path}`)) return `https://abra-ca-dabra.app${path}${tail}`;
+        // An invented post goes to the Notes index, not the homepage, so the visitor still lands near the topic.
+        if (/^\/blog\//i.test(path)) return `https://abra-ca-dabra.app/blog/${tail}`;
         return `https://abra-ca-dabra.app/${tail}`;
       }
       flags.push("url");
@@ -185,7 +215,14 @@ export function postCheck(text, { seed = 0, recent = [] } = {}) {
     .replace(ABBREV, (match) => match.replace(/\./g, "\u2024"))
     .split(/(?<=[.!?])\s+/)
     .map((part) => part.replace(/\u2024/g, ".").trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // A bare link after a sentence ("... uses the file. https://abra-ca-dabra.app/glossary/llms-txt/") belongs to that
+    // sentence, so it is not cut by the four-sentence limit.
+    .reduce((list, part) => {
+      if (list.length && isLinkOnly(part)) list[list.length - 1] += ` ${part}`;
+      else list.push(part);
+      return list;
+    }, []);
   // A sentence that says a client is like the visitor ("StrongFoam has a similar fleet") is dropped.
   const kept = parts.filter((part) => !(CLIENTS.test(part) && LIKE_YOU.test(part)));
   if (kept.length < parts.length) flags.push("client_claim");
@@ -389,9 +426,13 @@ function nextSentence(buffer, clause = false) {
  * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
  * Stops after maxSentences.
  */
-export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false, recent = [], seed = 0, askedNext = false, dropAsk = null, emptyLines = null } = {}) {
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false, recent = [], seed = 0, askedNext = false, dropAsk = null, emptyLines = null, keepLinks = false } = {}) {
   let buffer = "";
   let count = 0;
+  // keepLinks (typed chat): a link the model puts after its last sentence ("... the file. https://.../glossary/x/")
+  // arrives as a piece of its own. It is kept with the sentence before it and does not count toward maxSentences.
+  // Voice leaves it out, since a link is not spoken.
+  let full = false;
   // dropOffers: hold back booking or Readiness Check sentences. One is used only if the
   // reply would otherwise be empty.
   let held = null;
@@ -429,8 +470,11 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
       dropped = true;
       return null;
     }
-    // A sentence that is only a link says nothing; skip it.
-    if (!out.text.replace(/https?:\/\/\S+/g, "").replace(/[\s.,;:!?]/g, "")) return null;
+    // A sentence that is only a link says nothing on its own. Typed chat keeps it after a sentence that passed.
+    if (!out.text.replace(/https?:\/\/\S+/g, "").replace(/[\s.,;:!?]/g, "")) {
+      if (keepLinks && count > 0 && isLinkOnly(out.text) && !out.flags.includes("url")) return { text: out.text.replace(/[.,;:!?]+$/, ""), flags: [...out.flags, "link"], link: true };
+      return null;
+    }
     if (out.flags.some((flag) => REPLACING.has(flag))) return { replace: out.text, flags: out.flags };
     if (recent.length && repeatsRecent(out.text, recent)) {
       // They asked for a next step: keep the offer, in words the chat has not used yet.
@@ -447,19 +491,38 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
       buffer = next.rest;
       if (!next.sentence) continue;
       const part = judge(next.sentence);
+      if (full) {
+        // Past the limit, only a trailing link is still let through.
+        if (part?.link) yield part;
+        return;
+      }
       if (!part) continue;
+      if (part.link) {
+        yield part;
+        continue;
+      }
       if (dropOffers && part.text && hasOffer(part.text)) {
         held ||= { ...part, flags: [...part.flags, "repeat_offer"] };
         continue;
       }
       yield part;
       count += 1;
-      if (part.replace || count >= maxSentences) return;
+      if (part.replace) return;
+      if (count >= maxSentences) {
+        if (!keepLinks) return;
+        full = true;
+      }
     }
   }
   const tail = buffer.replace(/\s+/g, " ").trim();
   const last = tail ? judge(tail) : null;
-  if (last && dropOffers && last.text && hasOffer(last.text)) {
+  if (full) {
+    if (last?.link) yield last;
+    return;
+  }
+  if (last?.link) {
+    yield last;
+  } else if (last && dropOffers && last.text && hasOffer(last.text)) {
     held ||= { ...last, flags: [...last.flags, "repeat_offer"] };
   } else if (last) {
     yield last;
