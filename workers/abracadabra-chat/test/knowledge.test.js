@@ -134,7 +134,8 @@ test("answer filter never lets the bot deny its portfolio or call the work free"
 
 test("links to our own site must be real pages", () => {
   assert.equal(sitePageKnown("https://abra-ca-dabra.app/portfolio/pirx/"), true);
-  assert.equal(sitePageKnown("https://abra-ca-dabra.app/blog/some-post/"), true);
+  assert.equal(sitePageKnown("https://abra-ca-dabra.app/blog/what-is-an-ai-agent/"), true);
+  assert.equal(sitePageKnown("https://abra-ca-dabra.app/blog/some-post/"), false, "an invented blog slug is not a real page");
   assert.equal(sitePageKnown("https://check.abra-ca-dabra.app/"), true);
   assert.equal(sitePageKnown("https://abra-ca-dabra.app/process"), false);
   const out = postCheck("See https://abra-ca-dabra.app/why-cloudflare for more.");

@@ -2,12 +2,12 @@
 title: "What Is an AI Agent? A Plain Answer for Owners"
 description: "An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic's split and McKinsey's count of who is scaling."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "what is an ai agent"
 author: abracadabra-studio
-cta: "An agent needs a written process and a person who checks it. The Readiness Check covers both."
+cta: "An agent needs a written process and a person who checks it. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/what-is-an-ai-agent/01.webp
     file: what-is-an-ai-agent-01.jpg

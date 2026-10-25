@@ -2,12 +2,12 @@
 title: "Why We Build on Cloudflare: Security, AI and the Edge"
 description: "Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources."
 datePublished: "2026-10-21"
-dateModified: "2026-10-21"
+dateModified: "2026-10-25"
 pillar: "AI consulting and implementation"
 cluster: "platform"
 primaryQuery: "why build on Cloudflare"
 author: abracadabra-studio
-cta: "Is your business ready to put AI to work? Take the five-to-seven-minute Readiness Check."
+cta: "Thinking about putting AI to work? Take the five-to-seven-minute Readiness Check. It gives you next steps for your business."
 images:
   - src: /blog/media/why-we-build-on-cloudflare/01.webp
     file: why-we-build-on-cloudflare-01.jpg
@@ -39,7 +39,7 @@ faqs:
   - question: "What is AI Search, and what happened to AutoRAG?"
     answer: "AI Search is the new name for AutoRAG. Cloudflare renamed it in its changelog. It lets an app or agent search your own files in plain words."
   - question: "How do I know if my business is ready to put AI to work?"
-    answer: "Take the Readiness Check. In five to seven minutes it gives you a band and four scores: pressure, readiness, growth, and website visibility from a live read of your public site. You also get three suggestions in each section."
+    answer: "Take the Readiness Check. It takes five to seven minutes and looks at the work that slows you down, your data and workflow, where new customers come from, and a live read of your public site. It gives you next steps for your business."
 citations:
   - id: cf-workers
     title: "Cloudflare Workers: Overview"
@@ -233,6 +233,6 @@ For our clients, the point is that cost tracks use. A new tool does not need a b
 
 If you need a custom app, an AI assistant, or an agent that does real work, it is a strong place to start. We build [custom apps](/services/custom-apps/), [AI assistants and agents](/services/ai-assistants-and-agents/), and [one bill for many AI models](/services/any-model-one-bill/), and we build them on the stack in this note. If you are still deciding between a product and a build, read [off-the-shelf AI or custom software](/blog/off-the-shelf-ai-or-custom-software).
 
-The first step is knowing where you stand. The [Readiness Check](https://check.abra-ca-dabra.app/check) takes five to seven minutes. It looks at the jobs that eat your week, whether your data and workflow can support real work, where new customers come from, and how well answer engines can find and quote your public site. You get a band, four scores and three suggestions in each section, plus a thirty-minute working session if you want one. Take it, then [start a project](/start/) or write to houdini@abra-ca-dabra.app, and we will look at the results with you.
+The first step is knowing where you stand. The [Readiness Check](https://check.abra-ca-dabra.app/check) takes five to seven minutes. It looks at the jobs that eat your week, whether your data and workflow can support real work, where new customers come from, and how well answer engines can find and quote your public site. It gives you next steps for your business, with three suggestions in each section, plus a thirty-minute working session if you want one. Take it, then [start a project](/start/) or write to houdini@abra-ca-dabra.app, and we will look at the results with you.
 
 Cloudflare, the Cloudflare logo, Cloudflare Workers, Workers AI and Durable Objects are trademarks and/or registered trademarks of Cloudflare, Inc. in the United States and other places. This note is our own view and is not endorsed by Cloudflare.

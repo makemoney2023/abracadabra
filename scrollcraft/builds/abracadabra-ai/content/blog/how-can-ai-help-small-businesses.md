@@ -2,12 +2,12 @@
 title: "How Can AI Help a Small Business? What Surveys Count"
 description: "Two 2025 surveys count different work. This note separates generative-AI use from AI in production, then names the jobs owners hand over."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: AI for small business
 cluster: adoption
 primaryQuery: how can ai help small businesses
 author: abracadabra-studio
-cta: "Surveys measure everyone. The Readiness Check measures you."
+cta: "Surveys count a crowd. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/how-can-ai-help-small-businesses/01.webp
     file: help-hero.jpg

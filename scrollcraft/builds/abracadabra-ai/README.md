@@ -4,6 +4,17 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Readiness Check copy (2026-10-25)
+
+- **What changed**: Client Services asked that the site never promise a Readiness Check score. Every mention of what the check gives you now uses their line, "It gives you next steps for your business." Scores, bands, band names and band ranges were taken out of the glossary (Readiness Check, AI readiness, AI visibility), sixteen blog posts and their CTAs, `llms.txt`, the chat widget's Readiness Check card and the chat's site knowledge. Two links to a check page that no longer exists (`/band/forming`) now go to the readiness guide.
+- **Guard**: `scripts/readiness-copy.mjs` finds a sentence that names the Readiness Check (or "the check" on a page that names it) and talks about a score, a band or a band name, plus the next sentence when it carries on about the check. `npm run build` fails on any hit in a built page, meta tag, JSON-LD block, RSS or llms file, and `tests/readiness-copy.test.mjs` checks the same rule on sources, the widget and the chat knowledge. The privacy notice's line about how the check stores and scores your answers is allowed on purpose.
+
+## Glossary, batch 2 (2026-10-25)
+
+- **What changed**: ten more terms, all from `content/glossary.json` with no new page code: Readiness Check, AI citation, business process automation (BPA), custom software, AI visibility, generative AI, workflow, answer engine, crawler, HQ. The index (A to Z and "Terms by topic") and related terms on batch 1 pages pick them up.
+- **Backlinks**: the linker now skips label text (`kicker`, `eyebrow`, `collection-index`, `num`, `proof-metrics__caption`, `hero__copy`) as well as headings, CTAs, captions and quotes, and the build fails if any page would carry more than `MAX_GLOSSARY_LINKS_PER_PAGE` (6) glossary links. A source is listed only when the page has a real prose mention to link.
+- **Chat**: `npm run knowledge` adds the ten terms to `SITE_GLOSSARY` (standing prompt unchanged; site knowledge 14,552 characters). See the chat README for the link, sentence-cut and invented blog path fixes.
+
 ## Glossary, batch 1 — 2026-10-24
 
 - **What changed** — New `/glossary/` index (A to Z jump list plus "Terms by topic") and one page per published term at `/glossary/<slug>/`. Batch 1 publishes ten terms: AI agent, generative engine optimization (GEO), answer engine optimization (AEO), large language model (LLM), llms.txt, AI readiness, machine learning, gradient boosting, schema markup and JSON-LD (one entry), agentic AI. Each page has an answer-first definition, an explainer, question H2s, a visible FAQ, related terms (published terms only), "Where we use this term" (every source page) and its primary sources with the date they were checked. The footer gets a "Glossary" link (not the top nav).

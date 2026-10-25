@@ -11,6 +11,10 @@ const BLOCKED = new Set([
   "textarea", "aside", "header", "footer", "noscript", "template", "dialog", "form", "kbd", "sup",
   "table", "blockquote", "picture", "video", "audio", "iframe", "object", "time",
 ]);
+/** Label-style paragraphs (kickers, eyebrows, stat strips) and the hero copy read like headings, so they never get a link either. */
+export const LABEL_CLASSES = ["kicker", "eyebrow", "collection-index", "num", "proof-metrics__caption", "hero__copy"];
+/** At most this many glossary links on one page, so an article never turns into a list of links. */
+export const MAX_GLOSSARY_LINKS_PER_PAGE = 6;
 /** Text only counts as prose when it sits inside one of these. */
 const PROSE = new Set(["p", "li", "dd"]);
 const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
@@ -67,7 +71,7 @@ function walkProse(tokens, visit, skipClasses = []) {
         continue;
       }
       if (info.selfClosing) continue;
-      const blocked = BLOCKED.has(info.name) || isHidden(token.value) || classOf(token.value).some((c) => skipClasses.includes(c));
+      const blocked = BLOCKED.has(info.name) || isHidden(token.value) || classOf(token.value).some((c) => skipClasses.includes(c) || LABEL_CLASSES.includes(c));
       stack.push({ name: info.name, blocked });
       continue;
     }

@@ -2,12 +2,12 @@
 title: "AI Readiness Checklist Before You Buy a Tool"
 description: "Questions to answer before you buy an AI tool, grouped by data, process, people, and the decision. Public surveys name the gaps those questions catch."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "ai readiness checklist"
 author: abracadabra-studio
-cta: "A tick list is not a decision. Run the Readiness Check."
+cta: "A tick list is not a decision. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/ai-readiness-checklist/01.webp
     file: ai-readiness-checklist-01.jpg
@@ -51,7 +51,7 @@ citations:
 ---
 An AI readiness checklist is the list of questions you answer before you pay for a tool. We use it when an owner has a demo booked. The owner has not yet said which job the tool is for. The questions fall into four groups, which are data, process, people, and the decision. A vendor's feature list cannot stand in for any of them.
 
-The [Readiness Check](https://check.abra-ca-dabra.app/check) scores the same four groups. The [assessment note](/blog/ai-readiness-assessment) compares the public tools, and the [data note](/blog/ai-ready-data) stays on the first group. If the process score is your weak spot, the [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the page we hand over.
+The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about the same four groups, and it gives you next steps for your business. The [assessment note](/blog/ai-readiness-assessment) compares the public tools, and the [data note](/blog/ai-ready-data) stays on the first group. If the process is your weak spot, the [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the page we hand over.
 
 We think of the checklist as a brake. The tour of a tool always looks tidy. The real test comes on the busy afternoon after it, when nobody remembers which screen is the right one. A tick means you can point to the answer, and a blank means you cannot. The blanks are the useful part.
 
@@ -91,7 +91,7 @@ The decision questions are separate. What would count as success, who can stop t
 
 <!--cta:inline-->
 
-A tick list does not tell you which gap is largest. The Readiness Check turns the same four groups into a band. We still want the paper list first. A band without a talk is just a costume on a number. The list is the talk. The band is what you get when you want the same questions scored the same way next time.
+A tick list does not tell you which gap is largest. The Readiness Check asks about the same four groups and gives you next steps for your business. We still want the paper list first. A next step without a talk is easy to skip. The list is the talk. The check is what you use when you want the same questions asked the same way next time.
 
 <!--image:3-->
 
@@ -125,7 +125,7 @@ Third, we walk through data, then process, then people, then the decision, and w
 
 Fourth, we read the blanks back and name one owner for the next change. If the missing record is the blank that matters, the two of them agree on what they will treat as the record on ordinary days. The owner's job is to back that choice when it is inconvenient.
 
-Fifth, and only then, we look at tools with the sheet on the table. Any feature that does not touch a ticked box or a named blank is a distraction. If the blanks are still the whole story, we stop. A process blank goes to the process guide. The same four groups go to the check when we want a band instead of ticks.
+Fifth, and only then, we look at tools with the sheet on the table. Any feature that does not touch a ticked box or a named blank is a distraction. If the blanks are still the whole story, we stop. A process blank goes to the process guide. The same four groups go to the check when we want next steps instead of ticks.
 
 We book the session after the rush. We keep it short so the counter lead is not watching the door. A checklist filled in by the owner alone at midnight will be full, but it will be wrong.
 

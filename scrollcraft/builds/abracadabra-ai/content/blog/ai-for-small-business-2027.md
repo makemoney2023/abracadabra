@@ -2,12 +2,12 @@
 title: "AI for Small Business: What the Surveys Still Say"
 description: "Two surveys still disagree because they ask different questions. One counts generative AI use. The other counts AI used to produce the goods or the service."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI for small business"
 cluster: "adoption"
 primaryQuery: "ai for small business"
 author: abracadabra-studio
-cta: "A survey is not this business. Run the Readiness Check."
+cta: "A survey is not this business. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/ai-for-small-business-2027/01.webp
     file: ai-for-small-business-2027-01.jpg
@@ -59,7 +59,7 @@ Statistics Canada found that 12.2% of businesses used AI to make goods or delive
 
 <!--cta:inline-->
 
-A firm can say yes to the Chamber question and no to the Statistics Canada question. Plan from the job you can name, and do not average the two percentages into one readiness rate. This site does not publish a combined score from the Readiness Check. If someone hands you one blended number made from these two, they have glued different questions together.
+A firm can say yes to the Chamber question and no to the Statistics Canada question. Plan from the job you can name, and do not average the two percentages into one readiness rate. This site does not publish a combined readiness rate, and neither does the Readiness Check. If someone hands you one blended number made from these two, they have glued different questions together.
 
 <!--image:3-->
 
@@ -95,7 +95,7 @@ Quoting one percentage in a staff meeting is the fastest way to start a useless 
 
 The mirror mistake is shame from the smaller number. In the Statistics Canada count, 12.2% of businesses used AI to make goods or deliver services in 2025. That was up from 6.1% a year earlier. An owner hears "almost nobody is really doing this" and either freezes or decides the whole topic is hype. Neither reaction picks a job. The smaller number describes a strict question and says nothing about your character.
 
-Averaging the two rates is the mistake we will interrupt every time. A midpoint is not a readiness rate, because the firms, the countries, and the verbs all differ. This site does not publish a combined score from the Readiness Check. We do not want a homemade one in a spreadsheet either. If you want a number for your own business, it has to be about your own business. A national blend cannot tell the bookkeeper whether a scan is readable.
+Averaging the two rates is the mistake we will interrupt every time. A midpoint is not a readiness rate, because the firms, the countries, and the verbs all differ. This site does not publish a combined readiness rate. We do not want a homemade one in a spreadsheet either. If you want a number for your own business, it has to be about your own business. A national blend cannot tell the bookkeeper whether a scan is readable.
 
 Buying a tool to close the feeling gap is the costly version. The owner sees the gap between "we write notes" and "AI runs the shop." So she buys something that promises to run the shop. Neither survey asked her to do that. The surveys never named her wholesaler, her chipped glaze, or her bookkeeper's part-time days. A purchase that ignores those facts will stall for the usual reasons, and then people will blame the survey.
 

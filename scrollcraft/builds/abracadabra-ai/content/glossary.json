@@ -55,7 +55,8 @@
       "related": [
         "agentic-ai",
         "large-language-model",
-        "machine-learning"
+        "machine-learning",
+        "workflow"
       ],
       "sources": [
         "/blog/what-is-an-ai-agent",
@@ -143,7 +144,8 @@
         "answer-engine-optimization",
         "llms-txt",
         "schema-markup-json-ld",
-        "large-language-model"
+        "large-language-model",
+        "ai-visibility"
       ],
       "sources": [
         "/blog/generative-engine-optimization-vs-seo",
@@ -225,7 +227,9 @@
       "related": [
         "generative-engine-optimization",
         "llms-txt",
-        "schema-markup-json-ld"
+        "schema-markup-json-ld",
+        "answer-engine",
+        "ai-citation"
       ],
       "sources": [
         "/blog/answer-engine-optimization"
@@ -301,7 +305,8 @@
         "ai-agent",
         "machine-learning",
         "generative-engine-optimization",
-        "llms-txt"
+        "llms-txt",
+        "generative-ai"
       ],
       "sources": [
         "/blog/what-is-an-ai-agent"
@@ -384,7 +389,8 @@
         "generative-engine-optimization",
         "answer-engine-optimization",
         "large-language-model",
-        "schema-markup-json-ld"
+        "schema-markup-json-ld",
+        "crawler"
       ],
       "sources": [
         "/blog/what-is-llms-txt",
@@ -432,7 +438,7 @@
       "short": "AI readiness is how prepared a business is to put an AI tool to work and get value from it. It depends on the business more than the tool. That means its data, the way work gets done, its people and who makes decisions.",
       "explainer": [
         "A business can buy a strong tool and still get little from it. AWS makes the same point in its checklist for smaller firms: readiness is not just a technology choice. It covers your information, your workflows, your people and the rules for how AI is used and checked.",
-        "On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to see where you stand."
+        "On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to start. It gives you next steps for your business."
       ],
       "sections": [
         {
@@ -444,7 +450,7 @@
         {
           "q": "How do you measure AI readiness?",
           "a": [
-            "With an assessment that scores each area, so the gap is plain. AWS describes an AI readiness assessment as a structured look at data, technology, processes and people. Our Readiness Check gives a band and a few next steps."
+            "With an assessment that scores each area, so the gap is plain. AWS describes an AI readiness assessment as a structured look at data, technology, processes and people. Our Readiness Check is a different kind of tool. It gives you next steps for your business."
           ]
         }
       ],
@@ -459,13 +465,14 @@
         },
         {
           "question": "How can I check my AI readiness?",
-          "answer": "Use an assessment that scores data, process, people and decisions. The Abracadabra Readiness Check takes five to seven minutes and gives you a band and suggestions."
+          "answer": "Use an assessment that scores data, process, people and decisions. The Abracadabra Readiness Check takes five to seven minutes. It gives you next steps for your business."
         }
       ],
       "related": [
         "machine-learning",
         "ai-agent",
-        "agentic-ai"
+        "agentic-ai",
+        "readiness-check"
       ],
       "sources": [
         "/blog/ai-readiness-assessment",
@@ -826,13 +833,62 @@
     },
     {
       "term": "Readiness Check",
+      "name": "Readiness Check",
       "slug": "readiness-check",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 1,
+      "question": "What is the Readiness Check?",
+      "description": "The Readiness Check is Abracadabra's five-to-seven-minute online check for a business that wants to use AI. It gives you next steps for your business.",
       "category": "Abracadabra products",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "Abracadabra's five-to-seven-minute questionnaire. It scores data, process, people and the decision, gives a band and tips, and offers a thirty-minute working session.",
-      "mentions": 41,
+      "alternateName": [
+        "Abracadabra Readiness Check"
+      ],
+      "short": "The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.",
+      "explainer": [
+        "The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.",
+        "When you finish, you leave an email. It gives you next steps for your business. You see three suggestions in each section, and you can book a thirty-minute working session if you want one."
+      ],
+      "sections": [
+        {
+          "q": "What does the Readiness Check ask about?",
+          "a": [
+            "It asks about four areas. First is the work that slows you down and what it costs. Next is whether your data, your workflow, the owner and the decision can carry a system. Then it asks where new customers come from. Last, it reads how easily answer engines can find and quote your site."
+          ]
+        },
+        {
+          "q": "How is it different from an AI readiness assessment?",
+          "a": [
+            "An AI readiness assessment is the general idea: a structured look at how ready a business is for AI. AWS describes one as a look at data, technology, processes and people. The Readiness Check is our own version. It also asks where new customers come from and reads your website. It gives you next steps for your business."
+          ]
+        },
+        {
+          "q": "Is the Readiness Check a diagnosis?",
+          "a": [
+            "No. It is a working picture of the business as you describe it, plus a public read of the site. It is not medical, legal or financial advice."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "How long does the Readiness Check take?",
+          "answer": "Five to seven minutes. There is one question per screen, and you can leave and come back with the same link."
+        },
+        {
+          "question": "Do I need a website to take the Readiness Check?",
+          "answer": "Near the end, the check asks for a public website so it can read it. If that read fails, you still get the rest of the report."
+        },
+        {
+          "question": "What happens after I finish the Readiness Check?",
+          "answer": "You leave an email. Then you see your next steps, with three suggestions in each section, and a way to book a thirty-minute working session."
+        }
+      ],
+      "related": [
+        "ai-readiness",
+        "ai-visibility",
+        "answer-engine"
+      ],
       "sources": [
         "/blog/why-we-build-on-cloudflare",
         "/blog/ai-readiness-assessment",
@@ -840,89 +896,395 @@
         "/blog/ai-readiness-checklist",
         "/blog/ai-for-small-business-2027"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "Readiness Check",
+          "publisher": "Abracadabra",
+          "url": "https://check.abra-ca-dabra.app/check"
+        },
+        {
+          "title": "AI readiness checklist for SMBs: A practical starting point",
+          "publisher": "AWS",
+          "url": "https://aws.amazon.com/smart-business/resources-for-smb/ai-readiness-checklist/",
+          "date": "2025-09-01"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "Readiness Check"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "Abracadabra's five-to-seven-minute questionnaire. It scores data, process, people and the decision, gives a band and tips, and offers a thirty-minute working session.",
+      "changes": "Checked against the live check page. Client Services later asked that the site make no score promises, so the entry now says the check gives you next steps for your business, with no scores or bands. Kept the five-to-seven-minute length, the email step and the thirty-minute session. Never says the check costs nothing."
     },
     {
       "term": "AI citation",
+      "name": "AI citation",
       "slug": "ai-citation",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 2,
+      "question": "What is an AI citation?",
+      "description": "An AI citation is a link or source name an AI tool shows with its answer. What counts as one, how pages get cited, and why it is not a click.",
       "category": "Search and AEO/GEO",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "When an AI answer names your page as a source and links to it. A citation is not the same as a click.",
-      "mentions": 30,
+      "alternateName": [
+        "AI source citation"
+      ],
+      "short": "An AI citation is a link or source name that an AI tool shows with its answer to back up what it says. Perplexity shows numbered links, and Google's AI Overviews show links to supporting websites. Being cited is not the same as getting a click.",
+      "explainer": [
+        "Answer tools such as Perplexity, ChatGPT search and Google's AI features write a reply, then point to the pages they used. Perplexity says each answer includes numbered citations that link to the original sources. Google says AI Overviews and AI Mode show links to supporting websites.",
+        "For a business, a citation means an AI tool used your page as a source. But a reader may get what they need from the answer and never click. Pew found that people clicked result links less often when Google showed an AI summary. So we track citations and clicks as two different things."
+      ],
+      "sections": [
+        {
+          "q": "How does a page get cited by an AI tool?",
+          "a": [
+            "The tool has to be able to reach and read the page. For Google, the page must be indexed and able to show with a snippet, and Google says there are no extra technical rules for AI Overviews or AI Mode. After that, a page that answers a real question in plain words gives any answer tool something worth quoting."
+          ]
+        },
+        {
+          "q": "Is an AI citation the same as a click?",
+          "a": [
+            "No. A citation shows your page as a source. A click is when someone opens it. A person can read the answer, see your name and move on without visiting."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What does it mean when an AI tool cites my site?",
+          "answer": "It means the tool used your page as a source for its answer and showed a link or your name next to it. It does not mean the reader opened your page."
+        },
+        {
+          "question": "Do I need special code to be cited in Google's AI features?",
+          "answer": "No. Google says you do not need new machine-readable files, AI text files or special schema markup to appear in its AI features."
+        },
+        {
+          "question": "Where can I see clicks from Google's AI features?",
+          "answer": "Google says clicks and impressions from AI Overviews and AI Mode are counted in the Search Console Performance report, under the Web search type."
+        }
+      ],
+      "related": [
+        "answer-engine",
+        "ai-visibility",
+        "answer-engine-optimization",
+        "generative-engine-optimization"
+      ],
       "sources": [
         "/blog/answer-engine-optimization",
-        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
-        "/blog/ai-readiness-checklist",
-        "/blog/ai-ready-data",
-        "/services/search-grounded-research/"
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "AI features and your website",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/appearance/ai-features"
+        },
+        {
+          "title": "How does Perplexity work?",
+          "publisher": "Perplexity Help Center",
+          "url": "https://www.perplexity.ai/help-center/en/articles/10352895-how-does-perplexity-work"
+        },
+        {
+          "title": "Do people click on links in Google AI summaries?",
+          "publisher": "Pew Research Center",
+          "url": "https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/",
+          "date": "2025-07-22"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "AI citation",
+        "AI citations",
+        "citation",
+        "citations",
+        "cited"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "When an AI answer names your page as a source and links to it. A citation is not the same as a click.",
+      "changes": "Kept the meaning and the 'not the same as a click' line, now tied to Pew's click study. Widened 'names your page and links to it' to a link or a source name, since tools show either. Named how Perplexity and Google show them."
     },
     {
       "term": "Business process automation (BPA)",
+      "name": "Business process automation (BPA)",
       "slug": "business-process-automation",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 3,
+      "question": "What is business process automation (BPA)?",
+      "description": "Business process automation (BPA) uses software to run the repeated steps of a business process. A plain definition, examples, and how it differs from RPA.",
       "category": "AI agents and automation",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "Using software to run the repeated steps of a business job, like moving form answers into a report.",
-      "mentions": 16,
-      "sources": [
-        "/blog/ai-automation-for-small-business",
-        "/blog/business-process-automation-ai",
-        "/blog/how-can-ai-help-small-businesses",
-        "/blog/how-to-use-ai-in-your-business",
-        "/blog/ai-automation-agency-vs-consultant"
+      "alternateName": [
+        "BPA",
+        "Process automation"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "short": "Business process automation (BPA) means using software to do the repeated steps of a business job, like sending a bill to be approved. The aim is less manual work, fewer errors and the same result each time. It can run on simple rules, workflows or AI.",
+      "explainer": [
+        "IBM describes a business process as a series of steps toward one goal, such as onboarding a new hire or paying a supplier. BPA hands some or all of those steps to software. It often links several systems, so data moves from one to the next without anyone typing it again.",
+        "IBM also warns that automation stalls when the steps were never written down. That is why our note on business process automation with AI starts with a written job: the steps a person already does, who checks the result, and what counts as done."
+      ],
+      "sections": [
+        {
+          "q": "What are examples of business process automation?",
+          "a": [
+            "Sending a welcome email and setting up access for a new hire. Matching a purchase order to an invoice and sending it for approval. Routing a help desk ticket to the right person. Each one is a set of steps that runs the same way each time."
+          ]
+        },
+        {
+          "q": "How is BPA different from RPA and AI agents?",
+          "a": [
+            "Robotic process automation (RPA) is a narrower kind of BPA. It copies what a person does in an app, like moving data from one screen to another. An AI agent picks its own next step. BPA is the wider goal of automating the process, and it can use either one, or neither."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is BPA in simple terms?",
+          "answer": "BPA means letting software do the repeated steps of a business job, so people spend less time copying, checking and passing work along."
+        },
+        {
+          "question": "What should a business automate first?",
+          "answer": "Start with a job that repeats often, takes real time and has steps you can write down. IBM names email alerts, help desk tickets, payroll and invoicing as common starting points."
+        },
+        {
+          "question": "Does business process automation need AI?",
+          "answer": "No. Many processes run on simple rules. AI helps when a step needs reading or judgment, such as sorting emails by topic, and a person should still check the output."
+        }
+      ],
+      "related": [
+        "workflow",
+        "ai-agent",
+        "agentic-ai"
+      ],
+      "sources": [
+        "/blog/business-process-automation-ai"
+      ],
+      "refs": [
+        {
+          "title": "What is business process automation?",
+          "publisher": "IBM",
+          "url": "https://www.ibm.com/think/topics/business-process-automation"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "business process automation",
+        "BPA"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "Using software to run the repeated steps of a business job, like moving form answers into a report.",
+      "changes": "Kept the meaning. Swapped the example for IBM's invoice approval, added the goal (fewer manual steps and errors, the same way each time) and that BPA can use rules, workflows or AI. Added how it differs from RPA, per IBM."
     },
     {
       "term": "Custom software",
+      "name": "Custom software",
       "slug": "custom-software",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 4,
+      "question": "What is custom software?",
+      "description": "Custom software is built for one business or group of users, around how they work. How it differs from off-the-shelf software, and when to build it.",
       "category": "AI readiness and strategy",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "Software built around how one business works, for a job no ready-made product covers.",
-      "mentions": 16,
-      "sources": [
-        "/blog/off-the-shelf-ai-or-custom-software",
-        "/blog/why-we-build-on-cloudflare",
-        "/",
-        "/blog/how-client-work-flows-through-hq",
-        "/portfolio/pirx/"
+      "alternateName": [
+        "Bespoke software"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "short": "Custom software is software built for one business or group of users, around how they already work. Off-the-shelf software is different: it is made for many buyers and sold as a ready product. Custom software makes sense when no ready product does the job well.",
+      "explainer": [
+        "IBM describes custom software development as designing, building, deploying and maintaining software for a specific set of users, functions or organizations. Off-the-shelf software is built for a broad set of needs, so it can be packaged and sold to many buyers.",
+        "Neither is better by default. If a product already does the job, buying it is usually faster. Custom software earns its cost when the job is special to how your business works and the gap shows up every week. It also needs someone to look after it once it is built."
+      ],
+      "sections": [
+        {
+          "q": "When should a business build custom software?",
+          "a": [
+            "When the job is central to how you work, no product covers it without heavy workarounds, and someone will own it after launch. If a product already covers most of the job, buy it and adjust the process a little instead."
+          ]
+        },
+        {
+          "q": "What does custom software look like?",
+          "a": [
+            "It can be a customer app, an internal tool, a link between two systems, or an AI assistant set up for your own records. What makes it custom is who it is built for, not how big it is."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is the difference between custom and off-the-shelf software?",
+          "answer": "Custom software is built for one organization's needs. Off-the-shelf software is built for many buyers and sold ready to use."
+        },
+        {
+          "question": "Who looks after custom software once it is built?",
+          "answer": "Someone has to. Upkeep is part of the work, so decide who will fix it, update it and pay to run it before the build starts."
+        }
+      ],
+      "related": [
+        "ai-agent",
+        "workflow",
+        "business-process-automation"
+      ],
+      "sources": [
+        "/blog/off-the-shelf-ai-or-custom-software"
+      ],
+      "refs": [
+        {
+          "title": "What is software development?",
+          "publisher": "IBM",
+          "url": "https://www.ibm.com/think/topics/software-development"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "custom software",
+        "bespoke software"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "Software built around how one business works, for a job no ready-made product covers.",
+      "changes": "Kept the meaning. Widened 'one business' to one business or group of users (IBM), and named the contrast with off-the-shelf software. Moved 'no ready-made product covers it' from the definition of the term to when it makes sense."
     },
     {
       "term": "AI visibility (AI search visibility)",
+      "name": "AI visibility",
       "slug": "ai-visibility",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 5,
+      "question": "What is AI visibility?",
+      "description": "AI visibility is how often and how well a business shows up in answers written by AI tools. A plain definition, how to measure it, and how it relates to SEO.",
       "category": "Search and AEO/GEO",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "How easily AI search tools can find, trust and quote your site.",
-      "mentions": 15,
-      "sources": [
-        "/",
-        "/blog/why-we-build-on-cloudflare",
-        "/portfolio/pirx/",
-        "/products/schema/",
-        "/blog/answer-engine-optimization"
+      "alternateName": [
+        "AI search visibility"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "short": "AI visibility is how often a business shows up in answers that AI tools write, and how well. It might be named, quoted or linked. There is no standard way to measure it, so each tool and report counts it in its own way.",
+      "explainer": [
+        "The researchers who named generative engine optimization measured a source's visibility by how much of an AI answer drew on it and how early it showed up. Google's guide says terms like AEO and GEO describe work aimed at being visible in AI search, and that for Google this work is still SEO.",
+        "A few things shape it. AI and search crawlers must be allowed to read your pages. The pages must answer real questions in plain words. Your business details, such as your Google Business Profile, should be up to date. Our AI visibility service works on these."
+      ],
+      "sections": [
+        {
+          "q": "How do you measure AI visibility?",
+          "a": [
+            "There is no single number. You can check how often AI tools name or link your site for the questions your buyers ask. Google says clicks and impressions from AI Overviews and AI Mode are counted in Search Console under the Web search type. Track citations and clicks apart, because they move in different ways."
+          ]
+        },
+        {
+          "q": "How is AI visibility different from SEO?",
+          "a": [
+            "SEO is the wider work of helping search engines find, understand and show your pages. Google says the same SEO basics apply to its AI features. AI visibility is one result you watch: whether AI answers use you."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is AI search visibility?",
+          "answer": "It is another name for AI visibility: how much your business shows up, gets quoted or gets linked when AI tools answer questions."
+        },
+        {
+          "question": "Can I check my AI visibility?",
+          "answer": "Yes, in part. Ask the AI tools your buyers use the questions they ask, and note whether you show up. Our Readiness Check also does a live read of how well answer engines can find and quote your public site."
+        },
+        {
+          "question": "Does llms.txt improve AI visibility in Google?",
+          "answer": "No. Google says you do not need AI text files or special markup to appear in Google Search, including its AI features."
+        }
+      ],
+      "related": [
+        "ai-citation",
+        "answer-engine",
+        "generative-engine-optimization",
+        "llms-txt"
+      ],
+      "sources": [
+        "/services/custom-apps/"
+      ],
+      "refs": [
+        {
+          "title": "GEO: Generative Engine Optimization",
+          "publisher": "Aggarwal et al., KDD 2024 (arXiv)",
+          "url": "https://arxiv.org/abs/2311.09735",
+          "date": "2024-08-25"
+        },
+        {
+          "title": "Optimizing your website for generative AI features on Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+          "date": "2026-05-15"
+        },
+        {
+          "title": "AI features and your website",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/appearance/ai-features"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "AI visibility",
+        "AI search visibility"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "How easily AI search tools can find, trust and quote your site.",
+      "changes": "Changed 'how easily AI tools can find, trust and quote your site' to how often and how well you show up in AI answers, which matches how the GEO paper measures visibility. Said plainly that it is a working term with no standard measure. Dropped 'trust', which no source defines."
     },
     {
       "term": "Generative AI",
+      "name": "Generative AI",
       "slug": "generative-ai",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 6,
+      "question": "What is generative AI?",
+      "description": "Generative AI is AI that creates new text, images, audio, video or code from a request. A plain definition, examples, and how it differs from an LLM.",
       "category": "AI and machine learning",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "AI that makes new content, such as text, images, audio or video, from a request.",
-      "mentions": 11,
+      "alternateName": [
+        "Gen AI",
+        "GenAI"
+      ],
+      "short": "Generative AI is AI that creates new content, such as text, images, audio, video or software code, in response to a request. Large language models, which write text, are the best-known kind.",
+      "explainer": [
+        "IBM defines generative AI as AI that can create original content in response to a user's prompt or request. Google's machine learning glossary calls it an emerging field with no formal definition. It says most experts agree these models make content that is complex, coherent and original.",
+        "Much of the AI businesses used before was predictive: it sorted, scored or forecast things from past data. Generative AI makes something new, like a draft email or a product photo. A person should still check the output before it goes out, because it can sound sure and still be wrong."
+      ],
+      "sections": [
+        {
+          "q": "What are examples of generative AI?",
+          "a": [
+            "Chat tools that write text, image tools that make pictures from a description, and tools that make speech, music or video. Google's glossary lists large language models and image, audio and video models as examples."
+          ]
+        },
+        {
+          "q": "How do businesses use generative AI?",
+          "a": [
+            "For first drafts of emails, posts and reports, for summaries of long documents, and for pictures and video made from material they already have. The safe pattern is the same each time: the tool drafts, a named person checks, and only then does it go out."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is generative AI the same as an LLM?",
+          "answer": "No. A large language model is one kind of generative AI, the kind that writes text. Generative AI also covers models that make images, audio and video."
+        },
+        {
+          "question": "What is the difference between generative AI and an AI agent?",
+          "answer": "Generative AI makes content. An AI agent uses an AI model, often a generative one, to choose and take steps toward a goal, such as checking a calendar."
+        },
+        {
+          "question": "Can generative AI make mistakes?",
+          "answer": "Yes. It can write text that sounds right but is false, which Google's glossary calls a hallucination. Check facts, numbers and names before you use the output."
+        }
+      ],
+      "related": [
+        "large-language-model",
+        "machine-learning",
+        "ai-agent"
+      ],
       "sources": [
         "/blog/how-can-ai-help-small-businesses",
         "/blog/ai-for-small-business-2027",
@@ -930,79 +1292,382 @@
         "/blog/ai-strategy-for-small-business",
         "/blog/ai-automation-agency-vs-consultant"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "What is generative AI?",
+          "publisher": "IBM",
+          "url": "https://www.ibm.com/think/topics/generative-ai"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "generative AI",
+        "gen AI"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "AI that makes new content, such as text, images, audio or video, from a request.",
+      "changes": "Draft was accurate. Added software code to the list (IBM) and named large language models as the best-known kind. The explainer adds Google's note that the field has no formal definition."
     },
     {
       "term": "Workflow",
+      "name": "Workflow",
       "slug": "workflow",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 7,
+      "question": "What is a workflow?",
+      "description": "A workflow is the set of steps that takes work from start to finish in a set order. What it means in AI, and how a workflow differs from an AI agent.",
       "category": "AI agents and automation",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "A set of steps written in advance and done in the same order every time. Unlike an agent, it does not choose its own path.",
-      "mentions": 9,
+      "alternateName": [],
+      "short": "A workflow is the set of steps that takes a piece of work from start to finish, in a set order. In AI, it also means a system where an AI model and tools follow steps written in code ahead of time. That is different from an AI agent, which picks its own next step.",
+      "explainer": [
+        "Merriam-Webster defines a workflow as the sequence of steps that moves a working process from beginning to end. IBM describes it as a way to manage repeated tasks that happen in a particular order, like approving an invoice.",
+        "Anthropic draws the line that matters for AI. Workflows are systems where AI models and tools run through code paths set in advance. Agents direct their own steps and tool use. Anthropic says to start with the simplest option that works, and that is often a workflow."
+      ],
+      "sections": [
+        {
+          "q": "What is the difference between a workflow and an AI agent?",
+          "a": [
+            "In a workflow, someone wrote the order of the steps in advance, so it runs the same way each time. An AI agent decides its next step as it goes. Anthropic says workflows give predictable results for well-defined tasks, and agents fit when the job needs flexibility."
+          ]
+        },
+        {
+          "q": "When should a business use a workflow instead of an agent?",
+          "a": [
+            "When the steps never change. If the job is the same every time, a fixed workflow is cheaper to run and easier to check. Save an agent for a job that branches in ways you cannot write down ahead of time."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is an example of a workflow?",
+          "answer": "An online order that sends a confirmation email, checks stock and makes a shipping label, in that order, every time."
+        },
+        {
+          "question": "What is an agentic workflow?",
+          "answer": "Google's machine learning glossary uses the term for a process where an agent plans and carries out its own steps toward a goal. That is closer to an agent than to a fixed workflow."
+        },
+        {
+          "question": "Is workflow automation the same as business process automation?",
+          "answer": "Workflow automation is one kind of business process automation. IBM describes it as automating a set series of tasks so each one happens in the right order."
+        }
+      ],
+      "related": [
+        "ai-agent",
+        "agentic-ai",
+        "business-process-automation"
+      ],
       "sources": [
         "/blog/what-is-an-ai-agent",
         "/blog/ai-agents-vs-agentic-ai",
         "/blog/ai-agents-for-business",
-        "/blog/how-can-ai-help-small-businesses",
-        "/"
+        "/blog/how-can-ai-help-small-businesses"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "Workflow",
+          "publisher": "Merriam-Webster",
+          "url": "https://www.merriam-webster.com/dictionary/workflow"
+        },
+        {
+          "title": "What is a workflow?",
+          "publisher": "IBM",
+          "url": "https://www.ibm.com/think/topics/workflow"
+        },
+        {
+          "title": "Building effective agents",
+          "publisher": "Anthropic",
+          "url": "https://www.anthropic.com/research/building-effective-agents",
+          "date": "2024-12-19"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "workflow",
+        "workflows"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "A set of steps written in advance and done in the same order every time. Unlike an agent, it does not choose its own path.",
+      "changes": "The draft only covered the AI sense. Added the everyday meaning first (Merriam-Webster, IBM), then Anthropic's AI sense: steps written in code ahead of time. Kept the contrast with an agent."
     },
     {
       "term": "Answer engine",
+      "name": "Answer engine",
       "slug": "answer-engine",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 8,
+      "question": "What is an answer engine?",
+      "description": "An answer engine is a search tool that replies with a written answer and its sources, not only a list of links. A plain definition with examples.",
       "category": "Search and AEO/GEO",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "A tool that replies with a written answer instead of a list of links, such as ChatGPT search, Perplexity or Google AI Overviews.",
-      "mentions": 8,
+      "alternateName": [
+        "AI answer engine"
+      ],
+      "short": "An answer engine is a search tool that replies to a question with a written answer, usually with links to its sources, instead of only a list of links. Perplexity calls itself one. Google's AI Overviews and AI Mode work in a similar way.",
+      "explainer": [
+        "A classic search engine gives you a ranked list of pages to open. An answer engine reads pages for you and writes a short reply. Perplexity says it searches the web in real time, sums up what it finds and adds numbered citations that link to the original sources.",
+        "Google describes AI Overviews and AI Mode as AI-powered responses with links to supporting websites. It says the usual SEO basics apply to them. On this site we use answer engine as the plain name for this kind of tool."
+      ],
+      "sections": [
+        {
+          "q": "How is an answer engine different from a search engine?",
+          "a": [
+            "A search engine mainly returns a list of links for you to open and compare. An answer engine writes the answer first and shows its sources beside it. Many tools now do both, so the line is blurry."
+          ]
+        },
+        {
+          "q": "How does a business show up in an answer engine?",
+          "a": [
+            "The tool has to be able to find and read your pages, so its crawler must be allowed in. Then the page needs a clear, honest answer to a real question. For Google, the page must be indexed and able to show with a snippet."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is ChatGPT an answer engine?",
+          "answer": "ChatGPT search works like one. OpenAI says sites that allow its OAI-SearchBot crawler can be shown in ChatGPT search answers."
+        },
+        {
+          "question": "What is answer engine optimization?",
+          "answer": "It is the work of getting your pages used and cited when an answer engine writes a reply. Google says this work is still SEO."
+        },
+        {
+          "question": "Do answer engines send visitors to my site?",
+          "answer": "Some do, through the links in their answers. But an answer can name your page without the reader clicking, so count citations and clicks apart."
+        }
+      ],
+      "related": [
+        "answer-engine-optimization",
+        "ai-citation",
+        "generative-engine-optimization",
+        "crawler"
+      ],
       "sources": [
-        "/blog/answer-engine-optimization",
         "/services/ai-visibility/",
         "/blog/generative-engine-optimization-vs-seo",
-        "/portfolio/pirx/",
         "/blog/why-we-build-on-cloudflare"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "How does Perplexity work?",
+          "publisher": "Perplexity Help Center",
+          "url": "https://www.perplexity.ai/help-center/en/articles/10352895-how-does-perplexity-work"
+        },
+        {
+          "title": "Getting started with Perplexity",
+          "publisher": "Perplexity",
+          "url": "https://www.perplexity.ai/hub/blog/getting-started-with-perplexity"
+        },
+        {
+          "title": "AI features and your website",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/appearance/ai-features"
+        },
+        {
+          "title": "Overview of OpenAI Crawlers",
+          "publisher": "OpenAI",
+          "url": "https://platform.openai.com/docs/bots"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "answer engine",
+        "answer engines"
+      ],
+      "notMatch": [
+        "^answer engines? optimi"
+      ],
+      "verified": "2026-10-25",
+      "draft": "A tool that replies with a written answer instead of a list of links, such as ChatGPT search, Perplexity or Google AI Overviews.",
+      "changes": "Kept the meaning and added 'usually with links to its sources'. Swapped 'such as ChatGPT search' for Perplexity, which calls itself an answer engine, and said Google's AI features work in a similar way rather than claiming Google uses the term."
     },
     {
       "term": "Crawler (bot)",
+      "name": "Crawler",
       "slug": "crawler",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 9,
+      "question": "What is a crawler?",
+      "description": "A crawler is a program that visits and reads web pages on its own, for a search engine or an AI company. How robots.txt and AI crawlers work.",
       "category": "Web, schema and crawling",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "A program that visits web pages and reads them for a search engine or an AI company. Search crawlers and training crawlers are separate switches.",
-      "mentions": 6,
+      "alternateName": [
+        "Web crawler",
+        "Spider"
+      ],
+      "short": "A crawler is a program that visits web pages on its own and reads them, usually for a search engine or an AI company. It is also called a robot or spider. Sites use a robots.txt file to tell crawlers which pages they may visit.",
+      "explainer": [
+        "Google calls crawler a general term for any program that automatically finds and scans websites. Googlebot is the main one Google uses for Search. What crawlers read is how a search engine or an AI tool learns what is on your site.",
+        "AI companies run more than one crawler, and each one is a separate switch. OpenAI says OAI-SearchBot is for search, so blocking it keeps a site out of ChatGPT search answers. GPTBot collects pages that may be used to train its models. A site can allow one and block the other."
+      ],
+      "sections": [
+        {
+          "q": "What does robots.txt do for crawlers?",
+          "a": [
+            "It is a text file at the root of a site that says which crawlers may visit which paths. The rules are a request, not a lock: the Robots Exclusion Protocol standard says crawlers are asked to follow them, and that the rules are not a form of access control. Google says its common crawlers always respect robots.txt for automatic crawls."
+          ]
+        },
+        {
+          "q": "Should a business block AI crawlers?",
+          "a": [
+            "It depends on what you want. Blocking a search crawler can keep you out of that tool's answers. Blocking a training crawler only says your pages should not be used to train models. Decide one crawler at a time, not all at once."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is a crawler the same as a bot?",
+          "answer": "A crawler is one kind of bot. Google says crawlers are sometimes called robots or spiders. But not every bot is a crawler: some fill in forms or send spam."
+        },
+        {
+          "question": "What is Googlebot?",
+          "answer": "Googlebot is the main crawler Google uses for Google Search. Google says it always respects robots.txt rules for automatic crawls."
+        },
+        {
+          "question": "What is the difference between OAI-SearchBot and GPTBot?",
+          "answer": "OAI-SearchBot is how OpenAI finds sites for ChatGPT search. GPTBot collects pages that may be used to train OpenAI's models. Each has its own robots.txt setting."
+        }
+      ],
+      "related": [
+        "answer-engine",
+        "llms-txt",
+        "ai-visibility"
+      ],
       "sources": [
         "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
         "/services/ai-visibility/",
-        "/blog/why-we-build-on-cloudflare",
-        "/blog/what-is-llms-txt",
         "/blog/answer-engine-optimization"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "Overview of Google crawlers and fetchers (user agents)",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers"
+        },
+        {
+          "title": "RFC 9309: Robots Exclusion Protocol",
+          "publisher": "IETF",
+          "url": "https://www.rfc-editor.org/rfc/rfc9309.html",
+          "date": "2022-09-01"
+        },
+        {
+          "title": "Overview of OpenAI Crawlers",
+          "publisher": "OpenAI",
+          "url": "https://platform.openai.com/docs/bots"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "crawler",
+        "crawlers",
+        "web crawler",
+        "AI crawler",
+        "AI crawlers"
+      ],
+      "notMatch": [
+        "^bots?\\b"
+      ],
+      "verified": "2026-10-25",
+      "draft": "A program that visits web pages and reads them for a search engine or an AI company. Search crawlers and training crawlers are separate switches.",
+      "changes": "Kept the meaning. Added that crawlers work on their own (Google's definition), the robot and spider names, and robots.txt as the control. Made 'separate switches' concrete with OpenAI's OAI-SearchBot and GPTBot."
     },
     {
       "term": "HQ",
+      "name": "HQ",
       "slug": "hq",
-      "status": "backlog",
+      "status": "published",
+      "batch": 2,
+      "order": 10,
+      "question": "What is HQ?",
+      "description": "HQ is Abracadabra's client workspace, where our team and digital workers do your work and nothing goes out until you approve it. How it works.",
       "category": "Abracadabra products",
       "priority": "High",
-      "clientFlag": null,
-      "draft": "Abracadabra's client workspace. Each request becomes a card, digital workers do the work, Client Services reviews it, and you approve it before anything goes out.",
-      "mentions": 5,
+      "alternateName": [
+        "Abracadabra HQ"
+      ],
+      "short": "HQ is Abracadabra's client workspace, where our team and a crew of digital workers get your work done. Each request becomes a card with a plan. Nothing reaches your folders or your social networks until it has been reviewed and you have approved it.",
+      "explainer": [
+        "A request comes in by email, through the start-a-project form, or as a note on a piece in your space. A card opens on your project board with a plan for what each piece of work must make. Digital workers, which are AI agents set up for your business, build the work and file it to HQ, where it is held.",
+        "Client Services checks the work against your request, and a person on our team signs off. Then you approve each piece, ask for a change, or remove it. Finished work sits in named folders, and approved posts can be scheduled to your connected social networks."
+      ],
+      "sections": [
+        {
+          "q": "How does work move through HQ?",
+          "a": [
+            "Request, plan, build, review, approve and deliver. Digital workers do the building, people check it, and you decide what goes out. A change request opens a new card."
+          ]
+        },
+        {
+          "q": "What is a digital worker in HQ?",
+          "a": [
+            "It is an AI agent set up for your business with a clear role. For each card, it searches HQ's skill library for what the task needs, builds the work and files it for review. It lists the skills it used."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Who is HQ for?",
+          "answer": "HQ is for CEOs and business owners putting AI to work across their businesses. It is the workspace where Abracadabra delivers client work."
+        },
+        {
+          "question": "Can anything be posted without my approval?",
+          "answer": "No. Only finished work you have approved can be scheduled or posted. Work that is still held cannot."
+        },
+        {
+          "question": "Which social networks can HQ post to?",
+          "answer": "Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. You connect each account through the network's own sign-in."
+        },
+        {
+          "question": "How do I start with HQ?",
+          "answer": "HQ is our client workspace, so it opens when we start work together. Begin with the Readiness Check or a project."
+        }
+      ],
+      "related": [
+        "ai-agent",
+        "workflow",
+        "readiness-check"
+      ],
       "sources": [
         "/blog/how-client-work-flows-through-hq",
         "/products/hq/",
         "/blog/why-we-build-on-cloudflare",
-        "/",
-        "/products/"
+        "/"
       ],
-      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+      "refs": [
+        {
+          "title": "HQ",
+          "publisher": "Abracadabra",
+          "url": "https://abra-ca-dabra.app/products/hq/"
+        },
+        {
+          "title": "How Client Work Moves Through HQ and Our AI Agents",
+          "publisher": "Abracadabra",
+          "url": "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq/"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "HQ"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-25",
+      "draft": "Abracadabra's client workspace. Each request becomes a card, digital workers do the work, Client Services reviews it, and you approve it before anything goes out.",
+      "changes": "Checked against the live HQ product page. Added that the request becomes a card with a plan, and that nothing reaches your folders or social networks until it is reviewed and you approve it. Kept 'digital workers' and 'Client Services', the names HQ uses."
     },
     {
       "term": "Search engine optimization (SEO)",
