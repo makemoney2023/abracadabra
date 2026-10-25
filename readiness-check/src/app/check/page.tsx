@@ -4,6 +4,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { config } from "@/lib/assessment/config";
 import { faqPage, webApplicationLd } from "@/lib/seo/json-ld";
 import { checkCanonical, checkPageMetadata } from "@/lib/seo/check-metadata";
+import { CHECK_WHAT_YOU_GET } from "@/lib/marketing/copy";
 
 export const metadata = checkPageMetadata({
   title: "Readiness Check",
@@ -51,7 +52,7 @@ export default function CheckLandingPage() {
         <p className="studio-kicker">What you get</p>
         <h2 className="font-heading text-3xl">Your scores, your stage, and next steps for your business</h2>
         <p className="text-sm text-muted-foreground">
-          A score for readiness, growth, and website visibility, a short name for the stage the business is at today, next steps for your business, and a thirty-minute working session if you want one. Five to seven minutes.
+          {CHECK_WHAT_YOU_GET}
         </p>
       </section>
       <CheckFaq />
