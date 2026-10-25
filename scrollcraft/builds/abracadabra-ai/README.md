@@ -6,7 +6,7 @@ The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which t
 
 ## Readiness Check copy (2026-10-25)
 
-- **What changed**: Client Services asked that the site never promise a Readiness Check score. Every mention of what the check gives you now uses their line, "It gives you next steps for your business." Scores, bands, band names and band ranges were taken out of the glossary (Readiness Check, AI readiness, AI visibility), twelve blog posts and their CTAs, `llms.txt`, the chat widget's Readiness Check card and the chat's site knowledge. Two links to a check page that no longer exists (`/band/forming`) now go to the readiness guide.
+- **What changed**: Client Services asked that the site never promise a Readiness Check score. Every mention of what the check gives you now uses their line, "It gives you next steps for your business." Scores, bands, band names and band ranges were taken out of the glossary (Readiness Check, AI readiness, AI visibility), sixteen blog posts and their CTAs, `llms.txt`, the chat widget's Readiness Check card and the chat's site knowledge. Two links to a check page that no longer exists (`/band/forming`) now go to the readiness guide.
 - **Guard**: `scripts/readiness-copy.mjs` finds a sentence that names the Readiness Check (or "the check" on a page that names it) and talks about a score, a band or a band name, plus the next sentence when it carries on about the check. `npm run build` fails on any hit in a built page, meta tag, JSON-LD block, RSS or llms file, and `tests/readiness-copy.test.mjs` checks the same rule on sources, the widget and the chat knowledge. The privacy notice's line about how the check stores and scores your answers is allowed on purpose.
 
 ## Glossary, batch 2 (2026-10-25)
