@@ -745,8 +745,6 @@ export const productCards = [
   { ...products[1], href: `/products/${products[1].slug}/`, type: "SoftwareApplication" },
 ];
 
-export const PLACEHOLDER = "PLACEHOLDER — needs owner sign-off";
-
 export const placeholders = {
   offering: "Price, timeline, and a client example for this service are not on the site yet.",
   portfolio: "Want something like this for your business?",
