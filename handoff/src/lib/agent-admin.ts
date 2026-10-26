@@ -50,6 +50,7 @@ export const UNFILED_REASON_LABEL: Record<UnfiledReason | "stuck", string> = {
   no_space: "The client has no active space.",
   ambiguous_space: "The client has several spaces and it didn't say which.",
   space_rejected: "The space refused the files.",
+  filing_error: "HQ hit an error while filing it (see the card's timeline). The agent can send it again, or file it here.",
   stuck: "Filing started but didn't finish.",
 };
 

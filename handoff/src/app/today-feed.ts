@@ -115,7 +115,15 @@ const AGENT_WORK = new Set([
   "staff.task_review",
 ]);
 
-const BOARD_MOVES = new Set(["agent.task_stage", "staff.task_stage", "client_services.task_stage", "client_agent.board"]);
+const BOARD_MOVES = new Set([
+  "agent.task_stage",
+  "staff.task_stage",
+  "client_services.task_stage",
+  "client_agent.board",
+  "github.task_stage",
+  "github.card_note",
+  "client_agent.board_refused",
+]);
 
 const LABELS: Record<string, [string, string]> = {
   "lead.prospected": ["New prospect", "new prospects"],
@@ -126,6 +134,7 @@ const LABELS: Record<string, [string, string]> = {
   "client_agent.assigned": ["Agent assigned", "agent assignments"],
   "client_agent.unassigned": ["Agent unassigned", "agent removals"],
   "client_agent.work_unfiled": ["Agent work unfiled", "unfiled agent results"],
+  "client_agent.work_failed": ["Agent filing failed", "failed agent filings"],
   "client_agent.work_discarded": ["Agent work discarded", "discarded agent results"],
   "agent.reply": ["Agent replied", "agent replies"],
   "agent.question": ["Agent asked a question", "agent questions"],

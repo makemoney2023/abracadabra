@@ -71,7 +71,15 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   // The client's feedback is stored. What follows hands it on; a failure there is logged, not shown as an error.
   let scheduleError: string | null = null;
   try {
-    scheduleError = await handOn(sql, caller, { deliverableId: saved.value.id, feedbackId: saved.value.feedbackId, itemId: itemId || null, version, decision, body });
+    scheduleError = await handOn(sql, caller, {
+      deliverableId: saved.value.id,
+      feedbackId: saved.value.feedbackId,
+      itemId: itemId || null,
+      approvedItemIds: saved.value.approvedItemIds,
+      version,
+      decision,
+      body,
+    });
   } catch (error) {
     console.error("feedbackAction: handing feedback on failed", error);
   }
@@ -91,7 +99,16 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
 async function handOn(
   sql: Awaited<ReturnType<typeof openSession>>["sql"],
   caller: Awaited<ReturnType<typeof openSession>>["caller"],
-  input: { deliverableId: string; feedbackId: string; itemId: string | null; version: number; decision: FeedbackDecision; body: string },
+  input: {
+    deliverableId: string;
+    feedbackId: string;
+    itemId: string | null;
+    /** Pieces this approval moved to approved. Only these are scheduled, never pieces approved earlier (by an agent, for example). */
+    approvedItemIds: string[];
+    version: number;
+    decision: FeedbackDecision;
+    body: string;
+  },
 ): Promise<string | null> {
   const { decision } = input;
   let scheduleError: string | null = null;
@@ -125,19 +142,23 @@ async function handOn(
       sql,
     );
   }
-  if (opened && decision === "approve") {
+  if (opened && decision === "approve" && input.approvedItemIds.length > 0) {
     const zernio = openZernio();
     if (zernio) {
+      // Approving the whole deliverable schedules only the pieces it just approved. Pieces an agent (or anyone) approved
+      // earlier keep their approval and are not swept onto the calendar.
       const auto = await autoScheduleApproved(
         sql,
         zernio,
         openObjectStore(),
-        { deliverableId: opened.deliverable.id, itemIds: input.itemId ? [input.itemId] : null },
+        { deliverableId: opened.deliverable.id, itemIds: input.approvedItemIds },
         Date.now(),
       );
       if (auto.failed.length > 0) {
         console.error("feedbackAction: auto-schedule", auto.failed.join(" "));
         scheduleError = auto.failed[0] ?? "Cadence could not place this piece.";
+      } else if (auto.skipped.length > 0 && caller.staff) {
+        scheduleError = auto.skipped.length === 1 ? auto.skipped[0] : `${auto.skipped[0]} (${auto.skipped.length - 1} more not scheduled.)`;
       }
     }
   }

@@ -2,7 +2,7 @@
 title: "Why AI Pilots Stall After the Demo"
 description: "Pilots stall when the data, the risk controls, or the value was never named. Surveys show use is common and scaling is rare. The demo is not the process."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "why ai pilots stall"
@@ -112,7 +112,7 @@ Paying for a fresh demo to avoid the stop talk is the costly mistake. Gartner's 
 
 ## What we'd do
 
-We would score the stalled pilot before we let anyone pay for another demo. That is a strong opinion, and we stand by it. A second demo feels hopeful, but it is usually a way to avoid telling the seller and the staff that the first promise had no data behind it. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-low) is the page we open in that meeting. If the score says the business is not ready to decide, we still decide. Not being ready is a good reason to stop spending.
+We would score the stalled pilot before we let anyone pay for another demo. That is a strong opinion, and we stand by it. A second demo feels hopeful, but it is usually a way to avoid telling the seller and the staff that the first promise had no data behind it. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-low) is the page we open in that meeting. If the guide says the business is not ready to decide, we still decide. Not being ready is a good reason to stop spending.
 
 We would not comfort a small company with the McKinsey usage number. Saying that 88% use AI regularly, up from 78% a year earlier, only tells you people opened a tool. It does not tell you the office lead trusts a quote. About one third of companies are rolling AI out widely, 23% are rolling out an agent system somewhere, and 39% are still trying things out. No more than 10% are rolling out agents in any one part of the business. That is the honest picture. And 29% of firms under $100 million in revenue have reached wide rollout, against nearly half of firms over $5 billion. So the middle is hard even before you count being small. Being small is not what stalls a pilot. A missing checker is.
 

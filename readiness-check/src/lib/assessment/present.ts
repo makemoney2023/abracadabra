@@ -11,14 +11,26 @@ export type BookingPrefill = {
   mailto: string;
 };
 
+/**
+ * What a visitor sees: the scores (overall, readiness with its four pillars, growth, website visibility),
+ * a stage name with its sentence, and next steps for their business. `stage` and `bandLabel`/`bandSentence`
+ * carry the same band; the band fields keep the pre-stage API shape for anything that still reads them.
+ */
+export type StageView = { id: string; label: string; sentence: string };
+
+export type PressureView = { code: string; label: string; severityLabel: string };
+
 export type ResultsPayload = {
   domain: string | null;
   scores: AssessmentScores;
   bandLabel: string;
   bandSentence: string;
+  stage: StageView;
   topPressureLabel: string | null;
+  pressures: PressureView[];
   suggestions: Record<"readiness" | "growth" | "visibility", Suggestion[]>;
   offers: Offer[];
+  visibility: { status: AssessmentScores["visibility"]["status"] };
   scan: {
     token: string;
     status: string;
@@ -35,9 +47,19 @@ export type AssessmentPayload = {
   answers: Answers;
   qualifiers: Record<string, unknown>;
   gated: boolean;
-  preview?: { band: string; bandLabel: string };
+  /** The gate shows the stage name only; the scores come with the results after the email. */
+  preview?: { stage: string; stageLabel: string; band: string; bandLabel: string };
   results?: ResultsPayload;
 };
+
+/**
+ * "The job that costs the most right now: <label>." Pressure labels are full sentences that already end
+ * with a period, so strip trailing punctuation before adding ours (no "gets done..").
+ */
+export function costliestJobSentence(label: string | null | undefined): string {
+  const trimmed = (label ?? "").replace(/[.\s]+$/, "");
+  return trimmed ? `The job that costs the most right now: ${trimmed}.` : "";
+}
 
 export function buildBooking(input: {
   calLink: string | null | undefined;
@@ -46,11 +68,12 @@ export function buildBooking(input: {
   name: string;
   domain: string | null;
   band: string;
+  stageLabel?: string;
   pressure: string;
 }): BookingPrefill {
   const domain = input.domain ?? "";
   const subject = encodeURIComponent(`Working session — ${domain || "Readiness Check"}`);
-  const body = encodeURIComponent(`Band: ${input.band}\nSite: ${domain}`);
+  const body = encodeURIComponent(`Stage: ${input.stageLabel ?? input.band}\nSite: ${domain}`);
   return {
     calLink: input.calLink || null,
     prefill: {
@@ -91,17 +114,24 @@ export function selectAssessmentPayload(input: {
   if (!input.scores) return base;
   const band = bandFor(input.scores.overall.total, input.config);
   if (!input.optedIn) {
-    return { ...base, preview: { band: band.id, bandLabel: band.label } };
+    return { ...base, preview: { stage: band.id, stageLabel: band.label, band: band.id, bandLabel: band.label } };
   }
   const pressureQuestion = questionById("pressure", input.config);
   const top = input.scores.topPressure;
   const topLabel = pressureQuestion?.options?.find((o) => o.value === top)?.label ?? null;
+  const pressures: PressureView[] = input.scores.pressures.map((item) => ({
+    code: item.code,
+    label: pressureQuestion?.options?.find((o) => o.value === item.code)?.label ?? item.code,
+    severityLabel: input.config.severity.find((s) => s.score === item.severity)?.label ?? "",
+  }));
   const results: ResultsPayload = {
     domain: input.domain,
     scores: input.scores,
     bandLabel: band.label,
     bandSentence: band.sentence,
+    stage: { id: band.id, label: band.label, sentence: band.sentence },
     topPressureLabel: topLabel,
+    pressures,
     suggestions: selectSuggestions({
       scores: input.scores,
       answers: input.answers,
@@ -109,6 +139,7 @@ export function selectAssessmentPayload(input: {
       config: input.config,
     }),
     offers: mapPressuresToOffers({ pressures: input.scores.pressures, config: input.config }),
+    visibility: { status: input.scores.visibility.status },
     scan: input.scan
       ? {
           token: input.scan.token,
@@ -124,6 +155,7 @@ export function selectAssessmentPayload(input: {
       name: input.name ?? "",
       domain: input.domain,
       band: band.id,
+      stageLabel: band.label,
       pressure: top ?? "",
     }),
     appointment: input.appointment,

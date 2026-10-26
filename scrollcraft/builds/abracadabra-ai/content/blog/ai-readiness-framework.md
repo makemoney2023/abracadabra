@@ -1,13 +1,13 @@
 ---
 title: "An AI Readiness Framework an Owner Can Score"
-description: "Score data, process, people, and the decision in words, then read the band. Public research names the gaps. The check names the one that is yours."
+description: "Score data, process, people, and the decision in words. Public research names the gaps. The Readiness Check gives you next steps for your business."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI readiness"
 cluster: "framework"
 primaryQuery: "ai readiness framework"
 author: abracadabra-studio
-cta: "See how this business scores on data, process, people, and the decision."
+cta: "Words first, then the Readiness Check. It gives you next steps for your business."
 images:
   - src: /blog/media/ai-readiness-framework/01.webp
     file: ai-readiness-framework-01.jpg
@@ -25,8 +25,8 @@ images:
 faqs:
   - question: "How do you score a group without a fake percentage?"
     answer: "Call it absent, partial, in place, or running. Do not invent a percentage for a group you have not measured."
-  - question: "What are the Readiness Check bands?"
-    answer: "Early is 0 to 39, Forming is 40 to 59, Ready is 60 to 79, and Running is 80 to 100."
+  - question: "What does the Readiness Check give you?"
+    answer: "It gives you next steps for your business. It does not certify a business, and it does not replace the four words."
   - question: "Why does data sit first in the framework?"
     answer: "Gartner's February 2025 note says 63% of respondents do not have, or are unsure they have, the data practices AI needs. Through 2026 it expects firms to abandon 60% of AI projects that lack AI-ready data."
 citations:
@@ -39,7 +39,7 @@ citations:
     title: "Abracadabra Readiness Check"
     url: "https://check.abra-ca-dabra.app/check"
     publisher: "Abracadabra AI"
-    figures: ["0", "39", "40", "59", "60", "79", "80", "100"]
+    figures: []
   - id: gartner-data
     title: "Lack of AI-ready data puts AI projects at risk"
     url: "https://www.gartner.com/en/newsroom/press-releases/2025-02-26-lack-of-ai-ready-data-puts-ai-projects-at-risk"
@@ -59,11 +59,11 @@ NIST groups AI risk work as Govern, Map, Measure, and Manage.[^nist] This note u
 
 The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) is the matching page. The [assessment](/blog/ai-readiness-assessment) is the longer note, and the [questionnaire](/blog/ai-readiness-assessment-questionnaire) is the list of questions. The framework is what you do with the answers once they are on paper. You do not turn them into a fake share of readiness. You give each group a word you can defend.
 
-## What the bands mean
+## What the check adds
 
-The Readiness Check scores 0 to 39 as Early, 40 to 59 as Forming, 60 to 79 as Ready, and 80 to 100 as Running.[^check] The check helps you see where to look next. It does not certify a business.
+The Readiness Check asks about the same four groups.[^check] It gives you next steps for your business. The check helps you see where to look next. It does not certify a business.
 
-Read those bands as a shape and not as a medal. Early means the work that matters still lives in people's heads. Forming means some of it is written down, but nobody clearly owns it. Ready means you could put a system on the job without making up the job at the same time. Running means the tools already do real work, and the leftover pain is the task everyone still hands to one person. A band without those sentences is just a number. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
+Read the result as a shape and not as a medal. Sometimes the work that matters still lives in people's heads. Sometimes some of it is written down, but nobody clearly owns it. Sometimes you could put a system on the job without making up the job at the same time. And sometimes the tools already do real work, and the leftover pain is the task everyone still hands to one person. A result without those sentences is just a label. We do not certify anyone with it, because certifying is what a buyer wants to wave at a board. A small firm has no such board, and we will not pretend the check is a seal.
 
 <!--image:2-->
 
@@ -73,7 +73,7 @@ Cisco's 2025 index surveyed 8,000 senior leaders at companies with more than 500
 
 <!--cta:inline-->
 
-Score the four groups in words first. Then run the check if you want the band. Words come before numbers because a number is easy to flatter. If you jump to the band, you will argue with the number and not with the inbox.
+Score the four groups in words first. Then take the check if you want next steps. Words come first because a label is easy to flatter. If you jump to the label, you will argue with it and not with the inbox.
 
 <!--image:3-->
 
@@ -85,7 +85,7 @@ People is absent when nobody has said who may send output to a customer, and nob
 
 The decision is absent when success means less chaos. It is partial when success has a name but nobody can end the trial. It is in place when success, the person who can stop it, and the rule for wrong output are all written as sentences. It is running when you have already stopped something because the rule said to. A decision that has never met a bad week is still a draft.
 
-The band sits on top of those words and does not replace them. Early, Forming, Ready, and Running tell you the shape, and the four words tell you where to work. We have watched owners cheer for Ready and ignore a data score that was still partial. The framework makes that cheer walk past the weak group first.
+The check sits on top of those words and does not replace them. Its next steps point you somewhere, and the four words tell you where to work. We have watched owners cheer for a good result and ignore data that was still partial. The framework makes that cheer walk past the weak group first.
 
 ## A worked example
 
@@ -99,9 +99,9 @@ Next, process. The usual path is real. An email comes in, the kitchen lead check
 
 Then people. The front lead already drafts replies in a personal account when she falls behind, and then she pastes them into the inbox. The owner did not know that customer words were being drafted somewhere else. Nobody is named as the person who may send, and nobody is named as the person who may block a send. People is partial, and it leans toward absent on the permission that matters. We do not call it good enough just because the front lead is capable. Capable is not the same as allowed.
 
-Last, the decision. The owner says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except if it felt wrong. A feeling is not a rule, so the decision is partial. We will not average these four words into a cheerful Ready. Absent data and partial everything else is an Early or Forming shape. We would rather say that than borrow the pacesetter story for a bakery that was not in the sample.
+Last, the decision. The owner says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except if it felt wrong. A feeling is not a rule, so the decision is partial. We will not average these four words into a cheerful yes. Absent data and partial everything else is a shape that is not ready yet. We would rather say that than borrow the pacesetter story for a bakery that was not in the sample.
 
-We leave the owner with four words and one job, and not with a percentage or a certificate. The next move is to pick one record, either the notebook or the inbox, and make it the one that counts. Then write down the head count exception, and name who may send. After that, a band means something.
+We leave the owner with four words and one job, and not with a percentage or a certificate. The next move is to pick one record, either the notebook or the inbox, and make it the one that counts. Then write down the head count exception, and name who may send. After that, a next step means something.
 
 ## How we'd run it
 
@@ -111,7 +111,7 @@ Second, we put the front lead and the kitchen lead in the room, and not only the
 
 Third, we give data, then process, then people, then the decision one of the four words. We say each word out loud and wait to see if anyone objects. An objection usually means we were about to flatter the group. We move a word down when we cannot point at the proof. We never move it up because the demo was good.
 
-Fourth, we look at the check only then, if they want the band from 0 to 100. The band has to fit the four words. If data is absent, a low band should not surprise anyone, and we should not argue it upward to protect the owner's mood.
+Fourth, we look at the check only then, if they want next steps. The steps have to fit the four words. If data is absent, a step about the record should not surprise anyone, and we should not argue it away to protect the owner's mood.
 
 Fifth, we choose one group to move up a single step. Absent data becomes partial when one record gets a name, and not when a tool arrives. Partial process becomes in place when the head count exception sits on the same page as the usual path. We do not try to move all four groups in one panicked week. We take one step with one owner, and then we look again.
 
@@ -129,6 +129,6 @@ We also see people skip the decision because it feels soft. It is the group that
 
 ## What we'd do
 
-We would score in words and stay there until the words stop embarrassing us. In our view the band is a convenience and the four words are the work. A bakery that can say data is absent, and the kitchen lead's notebook is what we will make true, is ahead of a bakery that can quote a readiness percentage it did not earn.
+We would score in words and stay there until the words stop embarrassing us. In our view the check is a convenience and the four words are the work. A bakery that can say data is absent, and the kitchen lead's notebook is what we will make true, is ahead of a bakery that can quote a readiness percentage it did not earn.
 
-If we were the owner, we would stop answering catering emails from side drafts until the inbox and the book agree on which one wins. We would also write the head count change on the same card as the quote steps. Then we would take the check. If the band says Early, we would believe it and keep going, because the framework did its job when it stopped a fast yes.
+If we were the owner, we would stop answering catering emails from side drafts until the inbox and the book agree on which one wins. We would also write the head count change on the same card as the quote steps. Then we would take the check. If its next step is to fix the record first, we would believe it and keep going, because the framework did its job when it stopped a fast yes.

@@ -49,7 +49,12 @@ function context(extra: Record<string, unknown> = {}) {
       autoPublishBuilt: false,
       agentPausedAt: null,
     },
-    assessment: { totalScore: 70, scores: {}, answerSummary: "Ready to launch a site." },
+    assessment: {
+      totalScore: 70,
+      scores: {},
+      answerSummary: "Overall ready (70/100). Readiness 72. Staff only: never quote these numbers to the client.",
+      stageSummary: "Readiness Check stage: Ready.",
+    },
     project: { id: "proj-1", name: "Launch", status: "active", dueAt: null, milestones: [] },
     workspaces: [
       {
@@ -189,6 +194,10 @@ describe("client brief and design system", () => {
     for (const section of DESIGN_SECTIONS) expect(design).toContain(`## ${section}`);
     expect(brief).toContain(".cursor/skills/community/marketingskills/copywriting/SKILL.md");
     expect(brief).toContain("(plan)");
+    // The client can approve the brief, so it names the Readiness Check stage and never the score.
+    expect(brief).toContain("- Assessment: Readiness Check stage: Ready.");
+    expect(brief).not.toContain("70/100");
+    expect(brief).not.toMatch(/Readiness 72/);
     expect(design).toContain(".cursor/skills/community/ui-ux-pro-max-skill/design-system/SKILL.md");
     expect(Array.isArray(saves[0]?.args.sourcesJson)).toBe(true);
     const questions = calls.filter((entry) => entry.name === "ask_staff").map((entry) => String(entry.args.question));

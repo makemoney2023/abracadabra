@@ -2,7 +2,7 @@
 title: "AI Automation Agency vs Consultant: Who to Hire"
 description: "Hire a consultant to name the job. Hire an agency to build after the job is named. Who to hire first, and why the order matters."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI consulting and implementation"
 cluster: "consulting"
 primaryQuery: "ai automation agency vs consultant"
@@ -50,7 +50,7 @@ citations:
 ---
 Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system once those three are written down. When the agency comes first, the build has no owner. We've watched that happen in the wrong order more than once. The proposal arrives with staff, a toolset, and a start date. Nobody in the room can say which output a person still has to check. The build goes ahead anyway, because the calendar was the only decision anyone made.
 
-The [consultant note](/blog/ai-consultant-for-small-business) is the list of questions we wish owners had before the first sales call. The [buy-or-build note](/blog/off-the-shelf-ai-or-custom-software) covers whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) gives you a matching score when the choice itself is the thing you keep putting off. Hiring is a decision, so score it before you sign. A signature on a vague scope is not a plan. It is a hope with a payment schedule.
+The [consultant note](/blog/ai-consultant-for-small-business) is the list of questions we wish owners had before the first sales call. The [buy-or-build note](/blog/off-the-shelf-ai-or-custom-software) covers whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) gives you next steps when the choice itself is the thing you keep putting off. Hiring is a decision, so think it through before you sign. A signature on a vague scope is not a plan. It is a hope with a payment schedule.
 
 ## Two training figures, two populations
 

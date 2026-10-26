@@ -51,10 +51,11 @@ export default async function FinishedPiecePage({
   searchParams,
 }: {
   params: Promise<{ slug: string; id: string }>;
-  searchParams: Promise<{ format?: string; sent?: string; item?: string }>;
+  searchParams: Promise<{ format?: string; sent?: string; item?: string; schedule?: string }>;
 }) {
   const { slug, id } = await params;
-  const { format, sent, item } = await searchParams;
+  const { format, sent, item, schedule } = await searchParams;
+  const scheduleNote = typeof schedule === "string" ? schedule.trim().slice(0, 400) : "";
   const confirmation = sentConfirmation(sent);
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
@@ -167,6 +168,7 @@ export default async function FinishedPiecePage({
         <div role="status" aria-live="polite" tabIndex={-1} className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
           <p className="text-sm font-medium">{confirmation.title}</p>
           <p className="text-sm text-muted-foreground">{confirmation.body}</p>
+          {scheduleNote ? <p className="text-sm text-muted-foreground">{scheduleNote}</p> : null}
         </div>
       ) : null}
       <CollectionReviewHeader

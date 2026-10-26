@@ -635,7 +635,7 @@
       "section": "visibility",
       "severity": "info",
       "title": "The site scan did not finish",
-      "body": "We could not score the site this time. Run the scan directly and the visibility section will fill in.",
+      "body": "We could not read the site this time. Run the scan directly and the visibility section will fill in.",
       "guideSlug": "fix/vis-unavailable"
     },
     {
@@ -854,9 +854,9 @@
   ],
   "copy": {
     "landingTitle": "Is your business ready to put AI to work?",
-    "landingDeck": "A five-to-seven-minute check. You get a score for readiness, growth, and how readable your website is to AI answer engines, plus three things to do in each.",
+    "landingDeck": "A five-to-seven-minute check. You get a score and next steps for how the work runs, where new customers come from, and how readable your website is to AI answer engines, plus the stage your business is at today.",
     "start": "Start the check",
-    "gateHeadline": "Your check is scored.",
+    "gateHeadline": "Your check is done.",
     "gatePrompt": "Where should we send it?",
     "consent": "We'll send this report and, if you book, the notes from your session. Nothing else.",
     "bookingTitle": "Book a thirty-minute working session. Bring one workflow, and leave with a plan.",

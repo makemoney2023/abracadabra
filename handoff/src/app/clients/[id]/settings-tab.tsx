@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { MergeForm } from "../activity-forms";
 import { saveSearchConsoleGrantAction, setInternalAction, setUpdateModeAction } from "../actions";
+import type { AccessCheck, SearchProperty } from "@/lib/search/properties";
+import type { SyncRunSummary } from "@/lib/search/sync-status";
+import { SearchConsoleCard } from "./search-console-card";
 
 export function SettingsTab({
   keepId,
@@ -10,12 +13,18 @@ export function SettingsTab({
   searchConsoleResource,
   internal = false,
   updateMode = "draft",
+  searchProperties = [],
+  searchAccess = null,
+  searchRuns = {},
 }: {
   keepId: string;
   others: { id: string; name: string }[];
   searchConsoleResource: string;
   internal?: boolean;
   updateMode?: "draft" | "auto";
+  searchProperties?: SearchProperty[];
+  searchAccess?: AccessCheck | null;
+  searchRuns?: Record<string, SyncRunSummary>;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +68,7 @@ export function SettingsTab({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Search Console</CardTitle>
+          <CardTitle>Search Console connector</CardTitle>
           <CardDescription>The Search Console property for this client. Leave it blank to remove the grant.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -70,6 +79,7 @@ export function SettingsTab({
           </form>
         </CardContent>
       </Card>
+      <SearchConsoleCard organizationId={keepId} properties={searchProperties} access={searchAccess} suggestion={searchConsoleResource} runs={searchRuns} />
       <Card>
         <CardHeader>
           <CardTitle>Merge</CardTitle>

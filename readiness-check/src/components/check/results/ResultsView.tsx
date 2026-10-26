@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PillarMeter } from "@/components/public/PillarMeter";
 import { ScoreRing } from "@/components/public/ScoreRing";
-import type { AssessmentPayload, ResultsPayload } from "@/lib/assessment/present";
+import { Badge } from "@/components/ui/badge";
+import { costliestJobSentence, type AssessmentPayload, type ResultsPayload } from "@/lib/assessment/present";
 import type { ScoreBreakdown } from "@/lib/types";
 import { BookingCard } from "./BookingCard";
 
@@ -44,7 +45,7 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
   }, [token]);
 
   useEffect(() => {
-    if (results.scores.visibility.status !== "pending") return;
+    if (results.visibility.status !== "pending") return;
     const started = Date.now();
     const timer = window.setInterval(async () => {
       if (Date.now() - started > 3 * 60 * 1000) {
@@ -57,26 +58,36 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
       if (data.results) setResults(data.results);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [results.scores.visibility.status, token]);
+  }, [results.visibility.status, token]);
 
   const { scores } = results;
   const breakdown = scores.visibility.breakdown;
+  const costliest = costliestJobSentence(results.topPressureLabel);
 
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <header className="space-y-3">
         <p className="studio-kicker">Readiness Check</p>
-        <h1 className="font-heading text-5xl">{results.bandLabel}</h1>
+        <p className="text-sm text-muted-foreground">Where your business is today</p>
+        <h1 className="font-heading text-5xl" data-testid="stage-name">
+          {results.stage.label}
+        </h1>
         <p className="max-w-[46ch] text-lg text-muted-foreground">
-          {results.bandSentence}
-          {results.topPressureLabel ? ` The job that costs the most right now: ${results.topPressureLabel}.` : ""}
+          {results.stage.sentence}
+          {costliest ? ` ${costliest}` : ""}
         </p>
+        <Link href={`/check/guide/stage/${results.stage.id}`} className="text-sm underline">
+          What this stage means
+        </Link>
       </header>
 
       <section className="studio-panel space-y-5 p-5" aria-labelledby="readiness-heading">
         <h2 id="readiness-heading" className="font-heading text-3xl">
           Readiness
         </h2>
+        <p className="text-sm text-muted-foreground">
+          Your data, your workflow, who would own a new system, and who decides.
+        </p>
         <ScoreRing score={scores.readiness.total} label="Readiness" />
         <div className="grid gap-3 sm:grid-cols-2">
           <PillarMeter label="Data" score={scores.readiness.data} max={100} description="Where the knowledge lives." />
@@ -84,6 +95,7 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
           <PillarMeter label="People" score={scores.readiness.people} max={100} description="Who would own a new system." />
           <PillarMeter label="Decision" score={scores.readiness.decision} max={100} description="Who can say yes, and how fast." />
         </div>
+        <h3 className="font-heading text-xl">Next steps for how the work runs</h3>
         <SuggestionList items={results.suggestions.readiness} />
       </section>
 
@@ -92,10 +104,15 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
           Website visibility
         </h2>
         {scores.visibility.status === "complete" && scores.visibility.total != null ? (
-          <ScoreRing score={scores.visibility.total} label="AI visibility" />
+          <>
+            <p className="text-sm text-muted-foreground">
+              We read your public site the way an answer engine does. Here is how it scored and what to fix first.
+            </p>
+            <ScoreRing score={scores.visibility.total} label="AI visibility" />
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            {scores.visibility.status === "pending"
+            {results.visibility.status === "pending"
               ? "Reading the site. This card updates on its own."
               : "We could not read the site on this pass. The rest of the check still stands."}
           </p>
@@ -118,6 +135,7 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
             Open the full site scan
           </Link>
         ) : null}
+        <h3 className="font-heading text-xl">Next steps for your website</h3>
         <SuggestionList items={results.suggestions.visibility} />
       </section>
 
@@ -126,23 +144,22 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
           Growth
         </h2>
         <ScoreRing score={scores.growth.total} label="Growth" />
+        <h3 className="font-heading text-xl">Next steps for new customers</h3>
         <SuggestionList items={results.suggestions.growth} />
       </section>
 
       <section className="studio-panel space-y-4 p-5" aria-labelledby="pressure-heading">
         <h2 id="pressure-heading" className="font-heading text-3xl">
-          Pressure
+          Where the work slows down
         </h2>
-        {scores.pressures.length === 0 ? (
+        {results.pressures.length === 0 ? (
           <p className="text-sm text-muted-foreground">No single job was named.</p>
         ) : (
-          <ul className="space-y-2">
-            {scores.pressures.map((item) => (
-              <li key={item.code} className="flex items-center justify-between gap-3 text-sm">
-                <span>{item.code}</span>
-                <span className="studio-kicker border border-[var(--sc-hairline-strong)] px-2 py-1">
-                  Severity {item.severity}
-                </span>
+          <ul className="space-y-3">
+            {results.pressures.map((item) => (
+              <li key={item.code} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span>{item.label}</span>
+                {item.severityLabel ? <Badge variant="outline">{item.severityLabel}</Badge> : null}
               </li>
             ))}
           </ul>

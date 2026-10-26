@@ -118,5 +118,16 @@ export const SCORE_PREVIEW_COPY = {
 export const META_COPY = {
   title: "Schema — AI visibility for your website",
   description:
-    "Free AI-readiness check: see whether answer engines can confidently read your site. Score your structured data, discovery files, and page coverage — unlock the full report and PDF.",
+    "See whether answer engines can confidently read your site. Score your structured data, discovery files, and page coverage — unlock the full report and PDF.",
 } as const;
+
+/** Metadata for the Readiness Check pages, including a visitor's results (/check/[token]). Matches the results view: scores, stage and next steps; never "free", never a fixed tip count. */
+export const READINESS_META_COPY = {
+  title: "Your Readiness Check",
+  description:
+    "A five-to-seven-minute check that gives your business scores, a stage name, and next steps for where it is today, plus a thirty-minute working session if you want one.",
+} as const;
+
+/** The /check landing's "What you get" paragraph. Uses Client Services' line, "It gives you next steps for your business."; never "free", never a fixed tip count. */
+export const CHECK_WHAT_YOU_GET =
+  "A score for readiness, growth, and website visibility, a short name for the stage the business is at today, and a thirty-minute working session if you want one. It gives you next steps for your business. Five to seven minutes.";

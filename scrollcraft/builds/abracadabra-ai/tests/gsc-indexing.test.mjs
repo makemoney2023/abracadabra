@@ -134,3 +134,38 @@ test("the walkthrough carries real text in the HTML, not only after scripts run"
   assert.equal(/\u2014/.test(main), false, "no em dashes");
   assert.equal(/\bfree\b/i.test(main), false, "never free");
 });
+
+const sitemapLocs = () => [...read("sitemap.xml").matchAll(/<loc>https:\/\/abra-ca-dabra\.app([^<]*)<\/loc>/g)].map((match) => match[1] || "/");
+
+test("the sitemap has 80 URLs, 21 of them glossary pages, with no duplicates", () => {
+  const locs = sitemapLocs();
+  assert.equal(new Set(locs).size, locs.length, "no duplicate sitemap URLs");
+  assert.equal(locs.length, 80, `${locs.length} sitemap URLs`);
+  const glossary = locs.filter((loc) => loc.startsWith("/glossary/"));
+  assert.equal(glossary.length, 21, "the glossary index plus 20 published terms");
+  assert.ok(glossary.every((loc) => loc.endsWith("/")), "glossary URLs are slash-canonical");
+});
+
+test("every sitemap URL has its other variants covered by a 301 to it", () => {
+  for (const loc of sitemapLocs()) {
+    if (loc === "/" || loc.endsWith(".html")) continue;
+    const bare = loc.replace(/\/$/, "");
+    const variants = loc.endsWith("/") ? [bare, `${loc}index.html`] : [`${loc}/`, `${loc}/index.html`];
+    for (const variant of variants) {
+      const rule = RULES.get(variant);
+      assert.ok(rule, `${variant} has a redirect rule`);
+      assert.equal(rule.code, 301, `${variant} is a 301`);
+      assert.equal(rule.to, loc, `${variant} -> ${loc}`);
+    }
+  }
+});
+
+test("/glossary and each glossary term without the slash 301 to the slash URL", () => {
+  const terms = readdirSync(join(root, "glossary")).filter((name) => existsSync(join(root, "glossary", name, "index.html")));
+  assert.equal(terms.length, 20);
+  for (const path of ["/glossary", ...terms.map((slug) => `/glossary/${slug}`)]) {
+    assert.deepEqual(RULES.get(path), { to: `${path}/`, code: 301 }, path);
+    assert.deepEqual(RULES.get(`${path}/index.html`), { to: `${path}/`, code: 301 }, `${path}/index.html`);
+    assert.deepEqual(RULES.get(`${path}/`), { to: `${path}/index.html`, code: 200 }, `${path}/`);
+  }
+});

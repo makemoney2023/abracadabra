@@ -6,7 +6,7 @@ test("check landing and a guide have no serious accessibility violations", async
   const landing = await new AxeBuilder({ page }).analyze();
   expect(landing.violations.filter((item) => item.impact === "serious" || item.impact === "critical")).toEqual([]);
 
-  await page.goto("/check/guide/band/early");
+  await page.goto("/check/guide/stage/early");
   const guide = await new AxeBuilder({ page }).analyze();
   expect(guide.violations.filter((item) => item.impact === "serious" || item.impact === "critical")).toEqual([]);
 });

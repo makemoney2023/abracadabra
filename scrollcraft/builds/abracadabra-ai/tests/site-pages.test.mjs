@@ -330,7 +330,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(read("index.html"), /<section id="faq"/);
   assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
   assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
-  assert.match(read("index.html"), /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
+  assert.doesNotMatch(read("index.html"), /PLACEHOLDER/);
 });
 
 test("every remaining page family has an intentional premium composition", () => {

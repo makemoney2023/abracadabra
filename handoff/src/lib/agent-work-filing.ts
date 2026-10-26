@@ -10,6 +10,7 @@ import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { builtWorkByItem, builtWorkMarkdown, builtWorkWrites, parseBuiltWork, type BuiltWorkInput } from "@/lib/built-work";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { functionAgentsForClientWrites, functionAgentToAllClientsWrites } from "@/lib/function-agents";
+import { failureText, recordCardFailure } from "@/lib/card-automove";
 import { readyMediaBytes } from "@/lib/agent-media";
 import { inspectVideoDataUrl } from "@/lib/video-files";
 import { namedPosterPairs } from "@/lib/video-posters";
@@ -44,7 +45,9 @@ export type UnfiledReason =
   | "task_not_in_client"
   | "no_space"
   | "ambiguous_space"
-  | "space_rejected";
+  | "space_rejected"
+  /** HQ threw while filing (logged on the card). Sending the same external_id again files it. */
+  | "filing_error";
 
 export type Assignment = { organizationId: string; workspaceId: string | null; projectId: string | null; role: "lead" | "hire" };
 export type AgentPrincipal = { agentId: string; label: string; assignments: Assignment[] };
@@ -102,7 +105,9 @@ export type FileResult =
   | { ok: false; error: "invalid"; message: string }
   | { ok: false; error: "forbidden"; message: string }
   | { ok: false; error: "conflict"; message: string }
-  | { ok: false; error: "too_big"; message: string };
+  | { ok: false; error: "too_big"; message: string }
+  /** HQ failed while filing. The item is kept as unfiled (filing_error) and logged on the card; the same request retries it. */
+  | { ok: false; error: "failed"; message: string; workItemId: string; taskId: string | null; detail: string };
 
 type Write = { statement: string; params: readonly unknown[] };
 
@@ -562,24 +567,22 @@ export function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, rec
   return lines.join("\n");
 }
 
-function likeEscape(value: string): string {
-  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
-}
-
 /**
  * Names already used in the folder (lowercase), so a new filing gets "post-1 (2).png" instead of clashing. Hidden
  * batches don't count, and neither do the filings this one supersedes: the replacement keeps their names.
+ * The folder match is a prefix compare, not LIKE: D1 refuses LIKE patterns over 50 bytes ("LIKE or GLOB pattern too
+ * complex"), and the default folder "Finished work/<date> <title>" passes that for any title over about 20 characters.
  */
 async function takenPaths(sql: Sql, workspaceId: string, folder: string, agentId: string, supersedes: string[]): Promise<Set<string>> {
   const replaced = supersedes.length ? supersedes.map(() => "?").join(", ") : "NULL";
   const rows = await sql.all<{ path: string }>(
     `SELECT lower(f.relative_path) AS path FROM files f JOIN batches b ON b.id = f.batch_id
      WHERE f.workspace_id = ? AND b.discarded_at IS NULL AND b.deleted_at IS NULL AND b.hidden_at IS NULL
-       AND f.object_deleted_at IS NULL AND f.relative_path LIKE ? ESCAPE '\\'
+       AND f.object_deleted_at IS NULL AND lower(substr(f.relative_path, 1, length(?))) = lower(?)
        AND (b.work_item_id IS NULL OR b.work_item_id NOT IN (
          SELECT id FROM agent_work_items WHERE id IN (${replaced}) OR (agent_id = ? AND external_id IN (${replaced}))
        ))`,
-    [workspaceId, `${likeEscape(folder)}/%`, ...supersedes, agentId, ...supersedes],
+    [workspaceId, `${folder}/`, `${folder}/`, ...supersedes, agentId, ...supersedes],
   );
   return new Set(rows.map((row) => row.path));
 }
@@ -774,17 +777,22 @@ async function writeFiled(
 }
 
 async function markUnfiled(sql: Sql, itemId: string, agent: AgentPrincipal, payload: WorkPayload, reason: UnfiledReason, organizationId: string | null, suggested: string | null, now: number) {
+  // A filing that names a card of this client says so on the card's timeline: the card did not move.
+  const card = payload.taskId && organizationId
+    ? await sql.get<{ id: string; project_id: string | null }>("SELECT id, project_id FROM tasks WHERE id = ? AND organization_id = ?", [payload.taskId, organizationId])
+    : undefined;
   await sql.batch([
     {
       statement: "UPDATE agent_work_items SET state = 'unfiled', unfiled_reason = ?, organization_id = ?, suggested_organization_id = ?, updated_at = ? WHERE id = ?",
       params: [reason, organizationId, suggested, now, itemId],
     },
     {
-      statement: `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
-                  VALUES (?, ?, 'client_agent.work_unfiled', 'agent', ?, ?, ?, ?)`,
+      statement: `INSERT INTO activities (id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at)
+                  VALUES (?, ?, ?, 'client_agent.work_unfiled', 'agent', ?, ?, ?, ?)`,
       params: [
-        crypto.randomUUID(), organizationId, agent.agentId, `Agent work waits for filing (${reason}): ${payload.title}`.slice(0, 500),
-        JSON.stringify({ work_item_id: itemId, agent_id: agent.agentId, reason, suggested_organization_id: suggested }), now,
+        crypto.randomUUID(), organizationId, card?.project_id ?? null, agent.agentId,
+        `Agent work waits for filing (${reason}): ${payload.title}${card ? ". The card did not move." : ""}`.slice(0, 500),
+        JSON.stringify({ work_item_id: itemId, agent_id: agent.agentId, reason, suggested_organization_id: suggested, ...(card ? { task_id: card.id } : {}) }), now,
       ],
     },
   ]);
@@ -820,6 +828,68 @@ async function handoffAllowed(sql: Sql, to: string, organizationId: string): Pro
   return Boolean(row);
 }
 
+/** A received item older than this is taken as crashed (a filing finishes in seconds), so a retry files it again. */
+const STUCK_RECEIVED_MS = 2 * 60 * 1000;
+
+/** This agent's item for external_id when a retry should file it again: it failed inside HQ, or crashed in received. */
+async function retryableItem(sql: Sql, agentId: string, externalId: string, now: number): Promise<{ id: string; payloadKey: string | null } | null> {
+  const row = await sql.get<{ id: string; state: string; unfiled_reason: string | null; created_at: number; updated_at: number; payload_key: string | null }>(
+    "SELECT id, state, unfiled_reason, created_at, updated_at, payload_key FROM agent_work_items WHERE agent_id = ? AND external_id = ?",
+    [agentId, externalId],
+  );
+  if (!row) return null;
+  const failed = row.state === "unfiled" && row.unfiled_reason === "filing_error";
+  const stuck = row.state === "received" && Math.max(row.created_at, row.updated_at) < now - STUCK_RECEIVED_MS;
+  return failed || stuck ? { id: row.id, payloadKey: row.payload_key } : null;
+}
+
+/**
+ * HQ threw while filing. Never silent: if the filing row was already written (the card step failed), it stays filed;
+ * otherwise the item becomes unfiled (filing_error) so staff see it in Unfiled. Either way the error goes on the
+ * card's timeline (client_agent.work_failed) and back to the agent. The payload copy is kept for a retry.
+ */
+async function filingFailed(
+  sql: Sql,
+  input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; organizationId: string; error: unknown; now: number },
+): Promise<FileResult> {
+  const detail = failureText(input.error);
+  const taskId = input.payload.taskId ?? null;
+  const row = await sql.get<{ state: string }>("SELECT state FROM agent_work_items WHERE id = ?", [input.itemId]).catch(() => undefined);
+  const filed = row?.state === "filed";
+  if (!filed) {
+    await sql.run(
+      "UPDATE agent_work_items SET state = 'unfiled', unfiled_reason = 'filing_error', organization_id = ?, updated_at = ? WHERE id = ? AND state = 'received'",
+      [input.organizationId, input.now, input.itemId],
+    ).catch(() => undefined);
+  }
+  const what = filed ? "was filed, but moving its card failed" : "failed inside HQ";
+  let logged: string | null = null;
+  if (taskId) {
+    logged = await recordCardFailure(sql, {
+      taskId,
+      agent: input.agent,
+      kind: "client_agent.work_failed",
+      body: `Filing "${input.payload.title}" ${what}: ${detail}`,
+      data: { work_item_id: input.itemId, external_id: input.payload.externalId, error: detail, filed },
+      now: input.now,
+    }).catch(() => null);
+  }
+  if (!logged) {
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+       VALUES (?, ?, 'client_agent.work_failed', 'agent', ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(), input.organizationId, input.agent.agentId, `${input.agent.label}: Filing "${input.payload.title}" ${what}: ${detail}`.slice(0, 2000),
+        JSON.stringify({ work_item_id: input.itemId, agent_id: input.agent.agentId, external_id: input.payload.externalId, error: detail, filed }), input.now,
+      ],
+    ).catch(() => undefined);
+  }
+  const message = filed
+    ? `Your work was filed (work item ${input.itemId}), but HQ failed to move its card${taskId ? ` ${taskId}` : ""}, so it did not reach the card's review. This is logged on the card. Tell Client Services; do not file it again.`
+    : `HQ failed while filing this (work item ${input.itemId}), so it did not reach the card${taskId ? ` ${taskId}` : ""}. This is logged on the card and in Unfiled. Send the same request again (same external_id) to retry.`;
+  return { ok: false, error: "failed", message, workItemId: input.itemId, taskId, detail };
+}
+
 /** POST /api/agent-work body, already authenticated as `agent`. Idempotent on (agent, external_id). */
 export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPrincipal, raw: unknown, now: number): Promise<FileResult> {
   const parsed = parseWorkPayload(raw);
@@ -829,8 +899,13 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
   const limits = agentWorkLimits();
   const fileBytes = payload.attachments.reduce((sum, file) => sum + storedBytes(file.body), 0) + (payload.content ? storedBytes(payload.content) : 0);
   if (fileBytes > limits.maxFileBytes) return { ok: false, error: "too_big", message: tooBigMessage("files", fileBytes, limits) };
-  const seen = await existingResult(sql, agent.agentId, payload.externalId);
-  if (seen) return seen;
+  // A repeat is answered from the first filing, except one that failed inside HQ (or crashed and was left in received):
+  // that one is filed again on the same work item, so a retry is never swallowed as a duplicate.
+  const retry = await retryableItem(sql, agent.agentId, payload.externalId, now);
+  if (!retry) {
+    const seen = await existingResult(sql, agent.agentId, payload.externalId);
+    if (seen) return seen;
+  }
 
   const route = await resolveRoute(sql, agent, payload);
   if (route.ok && payload.handoffTo) {
@@ -857,7 +932,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     media = loaded.files;
   }
 
-  const itemId = crypto.randomUUID();
+  const itemId = retry?.id ?? crypto.randomUUID();
   // A big payload (attachments) waits in R2 while it is received or unfiled; the D1 row keeps a light copy.
   const full = JSON.stringify(payload);
   let payloadJson = full;
@@ -867,26 +942,41 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     await store.put(payloadKey, new TextEncoder().encode(full));
     payloadJson = JSON.stringify({ ...payload, content: null, attachments: payload.attachments.map((file) => ({ name: file.name, body: "" })) });
   }
-  try {
+  if (retry) {
     await sql.run(
-      `INSERT INTO agent_work_items (id, agent_id, external_id, state, kind, title, summary, organization_id, payload_json, payload_key, links_json, created_at, updated_at)
-       VALUES (?, ?, ?, 'received', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [itemId, agent.agentId, payload.externalId, payload.kind, payload.title, payload.summary, route.organizationId, payloadJson, payloadKey, JSON.stringify(payload.links), now, now],
+      `UPDATE agent_work_items SET state = 'received', kind = ?, title = ?, summary = ?, organization_id = ?, payload_json = ?, payload_key = ?,
+                                   links_json = ?, unfiled_reason = NULL, suggested_organization_id = NULL, updated_at = ?
+       WHERE id = ? AND state IN ('received', 'unfiled')`,
+      [payload.kind, payload.title, payload.summary, route.organizationId, payloadJson, payloadKey, JSON.stringify(payload.links), now, itemId],
     );
-  } catch (error) {
-    if (payloadKey) await store.remove(payloadKey).catch(() => undefined);
-    if (error instanceof Error && error.message.includes("UNIQUE")) {
-      const raced = await existingResult(sql, agent.agentId, payload.externalId);
-      if (raced) return raced;
+    if (retry.payloadKey && retry.payloadKey !== payloadKey) await store.remove(retry.payloadKey).catch(() => undefined);
+  } else {
+    try {
+      await sql.run(
+        `INSERT INTO agent_work_items (id, agent_id, external_id, state, kind, title, summary, organization_id, payload_json, payload_key, links_json, created_at, updated_at)
+         VALUES (?, ?, ?, 'received', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [itemId, agent.agentId, payload.externalId, payload.kind, payload.title, payload.summary, route.organizationId, payloadJson, payloadKey, JSON.stringify(payload.links), now, now],
+      );
+    } catch (error) {
+      if (payloadKey) await store.remove(payloadKey).catch(() => undefined);
+      if (error instanceof Error && error.message.includes("UNIQUE")) {
+        const raced = await existingResult(sql, agent.agentId, payload.externalId);
+        if (raced) return raced;
+      }
+      throw error;
     }
-    throw error;
   }
 
   if (!route.ok) {
     await markUnfiled(sql, itemId, agent, payload, route.reason, route.organizationId, route.suggestedOrganizationId, now);
     return { ok: true, duplicate: false, state: "unfiled", workItemId: itemId, reason: route.reason };
   }
-  const filed = await writeFiled(sql, store, { itemId, agent, payload, route, actor: "auto", now, media });
+  let filed: Awaited<ReturnType<typeof writeFiled>>;
+  try {
+    filed = await writeFiled(sql, store, { itemId, agent, payload, route, actor: "auto", now, media });
+  } catch (error) {
+    return filingFailed(sql, { itemId, agent, payload, organizationId: route.organizationId, error, now });
+  }
   if (filed.ok && payloadKey) await store.remove(payloadKey).catch(() => undefined);
   if (!filed.ok) {
     await markUnfiled(sql, itemId, agent, payload, "space_rejected", route.organizationId, null, now);

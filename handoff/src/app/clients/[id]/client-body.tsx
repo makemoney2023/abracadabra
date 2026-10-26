@@ -22,10 +22,14 @@ import { FilesTab } from "./files-tab";
 import { OverviewTab } from "./overview-tab";
 import { ReposTab, repoProjects } from "./repos-tab";
 import { SettingsTab } from "./settings-tab";
+import { SearchTab } from "./search-tab";
 import { SocialTab, type SocialView } from "./social-tab";
 import { ThreadsTab } from "./threads-tab";
 import { WorkTab } from "./work-tab";
 import type { ClientTabId } from "./tabs";
+import type { AccessCheck, SearchProperty } from "@/lib/search/properties";
+import type { SyncRunSummary } from "@/lib/search/sync-status";
+import type { SearchTabData } from "@/lib/search/search-tab";
 import type { StaffLibrarySummaryModel } from "@/components/library/staff-library-summary";
 
 export function ClientBody({
@@ -58,10 +62,14 @@ export function ClientBody({
   githubConnected,
   githubFailed,
   searchConsoleResource,
+  searchProperties = [],
+  searchAccess = null,
+  searchRuns = {},
   agentWork,
   internal = false,
   updateMode = "draft",
   social,
+  search,
   librarySummaries = [],
 }: {
   tab: ClientTabId;
@@ -93,12 +101,16 @@ export function ClientBody({
   githubConnected: boolean;
   githubFailed: boolean;
   searchConsoleResource: string;
+  searchProperties?: SearchProperty[];
+  searchAccess?: AccessCheck | null;
+  searchRuns?: Record<string, SyncRunSummary>;
   /** Hidden from Today as internal, test, or vendor. */
   internal?: boolean;
   /** Client updates on approved agent work: draft (default) or auto. */
   updateMode?: "draft" | "auto";
   agentWork?: ClientAgentWork;
   social?: SocialView;
+  search?: SearchTabData;
   librarySummaries?: StaffLibrarySummaryModel[];
 }) {
   if (tab === "work") {
@@ -120,6 +132,7 @@ export function ClientBody({
     );
   }
   if (tab === "social" && social) return <SocialTab organizationId={client.id} social={social} />;
+  if (tab === "search" && search) return <SearchTab organizationId={client.id} search={search} />;
   if (tab === "threads") return <ThreadsTab organizationId={client.id} threads={threads} />;
   if (tab === "agents") return <AgentWorkTab organizationId={client.id} work={agentWork ?? { agents: [], filed: [], updates: [] }} now={now} />;
   if (tab === "files") return <FilesTab organizationId={client.id} linked={linked} free={free} summaries={librarySummaries} />;
@@ -138,7 +151,16 @@ export function ClientBody({
   if (tab === "activity") return <ActivityTab organizationId={client.id} timeline={timeline} page={page} />;
   if (tab === "settings") {
     return (
-      <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} internal={internal} updateMode={updateMode} />
+      <SettingsTab
+        keepId={client.id}
+        others={others}
+        searchConsoleResource={searchConsoleResource}
+        internal={internal}
+        updateMode={updateMode}
+        searchProperties={searchProperties}
+        searchAccess={searchAccess}
+        searchRuns={searchRuns}
+      />
     );
   }
   return (

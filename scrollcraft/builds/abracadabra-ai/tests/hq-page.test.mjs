@@ -127,13 +127,16 @@ test("HQ page names its audience, links the course, and keeps the Cloudflare cla
   assert.ok(page.includes("thirty-minute working session"));
 });
 
-test("dateModified and sitemap lastmod are 2026-10-23 for the changed pages, and the hub does not imply HQ is try-it-now", () => {
+test("dateModified and sitemap lastmod are 2026-10-23 for the changed pages (the HQ post was edited again on 2026-10-25), and the hub does not imply HQ is try-it-now", () => {
   const sitemap = read("sitemap.xml");
-  for (const loc of ["https://abra-ca-dabra.app/", "https://abra-ca-dabra.app/products/", "https://abra-ca-dabra.app/products/hq/", "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq"]) {
-    assert.match(sitemap, new RegExp(`<loc>${loc.replace(/[./]/g, "\\$&")}</loc>\\s*(<lastmod>2026-10-23</lastmod>)`), `lastmod for ${loc}`);
+  const HQ_POST = "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq";
+  for (const loc of ["https://abra-ca-dabra.app/", "https://abra-ca-dabra.app/products/", "https://abra-ca-dabra.app/products/hq/", HQ_POST]) {
+    const day = loc === HQ_POST ? "2026-10-25" : "2026-10-23";
+    assert.match(sitemap, new RegExp(`<loc>${loc.replace(/[./]/g, "\\$&")}</loc>\\s*(<lastmod>${day}</lastmod>)`), `lastmod for ${loc}`);
   }
   for (const path of ["products/hq/index.html", "products/index.html", "index.html", "blog/how-client-work-flows-through-hq/index.html"]) {
-    assert.ok(JSON.stringify(graph(read(path))).includes('"dateModified":"2026-10-23"'), `dateModified in ${path}`);
+    const day = path.startsWith("blog/") ? "2026-10-25" : "2026-10-23";
+    assert.ok(JSON.stringify(graph(read(path))).includes(`"dateModified":"${day}"`), `dateModified in ${path}`);
   }
   const hub = strip(read("products/index.html")).replace(/\s+/g, " ").replace(/ ([.,])/g, "$1");
   assert.doesNotMatch(hub, /ready-made tools you can try today, schema and super funnel, and hq/i);

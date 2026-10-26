@@ -523,6 +523,8 @@ const UPDATE_KINDS = [
   "client_work.update_ready",
   "client_agent.work_superseded",
   "client_agent.work_withdrawn",
+  "client_agent.work_failed",
+  "github.task_stage",
 ] as const;
 
 type ActivityRow = {
@@ -818,7 +820,10 @@ export async function readSpaceForReview(sql: Sql, spaceId: string) {
 
 export type ReviewDecision = "approve" | "changes" | "comment";
 
-/** Client Services feedback on one deliverable in a Space. Logged as activity; changes wake the agent. */
+/**
+ * Client Services feedback on one deliverable in a Space. Logged as activity; changes wake the agent and send the card
+ * waiting on this review back to Doing. Approve moves that card to Done.
+ */
 export async function reviewDeliverable(
   sql: Sql,
   input: { spaceId: string; deliverableId: string; itemId?: string | null; decision: ReviewDecision; body: string; now: number },
@@ -897,6 +902,15 @@ export async function reviewDeliverable(
     }
     const fresh = await sql.get<{ status: string }>("SELECT status FROM deliverables WHERE id = ?", [row.id]);
     status = fresh?.status ?? status;
+  }
+  if (input.decision === "changes") {
+    // Asking for changes (whole deliverable or one piece) sends the card that waits on this review back to Doing,
+    // the same as a send back: filings stay held and, with AGENT_MODE=agents, its agent gets a "changes" handoff.
+    const card = await sql.get<{ id: string }>(
+      "SELECT id FROM tasks WHERE deliverable_id = ? AND status != 'done' AND review_requested_at IS NOT NULL LIMIT 1",
+      [row.id],
+    );
+    if (card) await clientServicesReview(sql, { taskId: card.id, action: "send_back", note: body, now: input.now });
   }
   return { ok: true, status, organizationId: space.organization_id };
 }

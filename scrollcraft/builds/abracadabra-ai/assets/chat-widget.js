@@ -1224,7 +1224,7 @@ export class AbraChat extends ElementBase {
     card.append(
       el("p", "kicker", "Five to seven minutes"),
       el("h3", null, "Take the AI Readiness Check."),
-      el("p", null, "Answer here in the chat, one question at a time. You get a score for readiness, growth, and how AI answer engines read your site, then a plan."),
+      el("p", null, "Answer here in the chat, one question at a time. It gives you next steps for your business."),
     );
     const start = el("button", "primary", "Start it here");
     start.type = "button";
@@ -1404,12 +1404,12 @@ export class AbraChat extends ElementBase {
     const card = el("div", "card booked");
     card.dataset.readinessResult = "true";
     card.append(
-      el("p", "kicker", "Readiness Check · scored"),
-      el("h3", null, `${data.band?.label || "Scored"}.`),
+      el("p", "kicker", "Readiness Check · your stage"),
+      el("h3", null, `${data.band?.label || "Finished"}.`),
     );
     if (data.band?.sentence) card.append(el("p", null, data.band.sentence));
-    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email, then shows each score and three suggestions in each section."));
-    const report = el("a", "primary", "See your score and plan");
+    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email. It gives you next steps for your business."));
+    const report = el("a", "primary", "See your next steps");
     report.href = data.reportUrl;
     report.target = "_blank";
     report.rel = "noopener noreferrer";
@@ -1419,7 +1419,7 @@ export class AbraChat extends ElementBase {
     card.append(report, book);
     this.stream.append(card);
     this.stream.scrollTop = this.stream.scrollHeight;
-    this.status.textContent = `Readiness Check scored: ${data.band?.label || "done"}.`;
+    this.status.textContent = `Readiness Check finished: ${data.band?.label || "done"}.`;
   }
 
   showBookingCard() {

@@ -290,7 +290,7 @@ type ClientPicture = {
     rules?: string[];
     agentPausedAt?: number | null;
   };
-  assessment?: { answerSummary?: string | null } | null;
+  assessment?: { answerSummary?: string | null; stageSummary?: string | null } | null;
   project?: { id?: string; name?: string } | null;
   workspaces?: { id?: string; logoObjectKey?: string | null }[];
   briefs?: { kind?: string }[];
@@ -468,7 +468,8 @@ function briefMarkdown(
     "",
     "## Sources",
     ...(ready.length ? ready.map((file) => `- ${file.relativePath}`) : ["- No file path."]),
-    `- Assessment: ${picture.assessment?.answerSummary ?? "No assessment summary."}`,
+    // The brief can go to the client for approval, so it carries the stage only, never the score numbers.
+    `- Assessment: ${picture.assessment?.stageSummary ?? "No assessment summary."}`,
     `- Website: ${picture.organization?.website ?? "None listed."}`,
     "",
     "## Skills",

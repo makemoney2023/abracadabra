@@ -98,7 +98,7 @@ export function CheckSession({ token }: { token: string }) {
     return (
       <GateForm
         token={token}
-        bandLabel={payload.preview?.bandLabel ?? "Scored"}
+        stageLabel={payload.preview?.stageLabel ?? ""}
         onResults={showResults}
       />
     );
