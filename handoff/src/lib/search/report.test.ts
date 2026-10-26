@@ -218,3 +218,23 @@ describe("loadSearchReport", () => {
     expect(report.totals.clicks).toBe(1);
   });
 });
+
+describe("finished days", () => {
+  it("finalOnly ends on the newest final day, and falls back to the newest day when none is final yet", async () => {
+    const sql = await searchDb();
+    const add = (day: string, final: number) =>
+      sql.run(
+        "INSERT INTO search_daily_site (organization_id, property_id, day, search_type, clicks, impressions, pos_sum, is_final) VALUES ('o', 'p', ?, 'web', 1, 10, 10, ?)",
+        [day, final],
+      );
+    await add("2026-10-22", 0);
+    await add("2026-10-23", 0);
+    const fresh = await loadSearchReport(sql, { organizationId: "o", propertyId: "p", range: "7d", now: NOW, finalOnly: true });
+    expect(fresh.state === "ok" && fresh.window.current.end).toBe("2026-10-23");
+    await add("2026-10-20", 1);
+    const settled = await loadSearchReport(sql, { organizationId: "o", propertyId: "p", range: "7d", now: NOW, finalOnly: true });
+    expect(settled.state === "ok" && settled.window.current.end).toBe("2026-10-20");
+    const all = await loadSearchReport(sql, { organizationId: "o", propertyId: "p", range: "7d", now: NOW });
+    expect(all.state === "ok" && all.window.current.end).toBe("2026-10-23");
+  });
+});

@@ -8,6 +8,7 @@ import { exportRaw, rawExportKey, writeAnalyticsDay, type RawBucket } from "./fa
 import { sharedTokenProvider } from "./google-auth";
 import { createGscClient, type GscClient } from "./gsc";
 import { pickInspectionCandidates, recordInspection } from "./inspection";
+import { recordSearchDataUpdated, searchUpdateRecipients } from "./agent-events";
 import { readableSites, searchActivity } from "./properties";
 import { runSearchRetention } from "./retention";
 import { collectSitemapUrls } from "./sitemap-urls";
@@ -302,6 +303,7 @@ async function handleFailure(job: SearchJob, property: Property, message: Search
     "UPDATE search_properties SET last_error = ?, consecutive_failures = consecutive_failures + 1, updated_at = ? WHERE id = ?",
     [text, now, property.id],
   );
+  await alertWhenFailing(deps.sql, property, text, now);
   if (final && backfill) await settleBackfill(deps.sql, property, now);
   if (permanent) {
     message.ack();
@@ -312,6 +314,30 @@ async function handleFailure(job: SearchJob, property: Property, message: Search
     ? Math.max(60, Math.ceil((error.retryAfterMs ?? 0) / 1000))
     : Math.min(60 * 2 ** (attempts - 1), 900);
   message.retry({ delaySeconds });
+}
+
+export const FAILURE_ALERT_AT = 3;
+
+/**
+ * After FAILURE_ALERT_AT failed attempts in a row (consecutive_failures, reset by any success), one search.sync_failing
+ * activity: staff see it on the client timeline, and the lead and the named search agents (SEARCH_UPDATE_AGENT_IDS) get it in GET /api/agent-work?dispatches=1.
+ * Once per streak: only the attempt that reaches the threshold writes it.
+ */
+async function alertWhenFailing(sql: Sql, property: Property, error: string, now: number): Promise<void> {
+  const row = await sql.get<{ consecutive_failures: number }>("SELECT consecutive_failures FROM search_properties WHERE id = ?", [property.id]);
+  if (row?.consecutive_failures !== FAILURE_ALERT_AT) return;
+  const recipients = await searchUpdateRecipients(sql, property.organization_id);
+  await sql.batch([
+    searchActivity(
+      property.organization_id,
+      "search.sync_failing",
+      "system",
+      null,
+      `Search Console sync for ${property.site_url} failed ${FAILURE_ALERT_AT} times in a row: ${error}`.slice(0, 500),
+      { property_id: property.id, site_url: property.site_url, failures: FAILURE_ALERT_AT, last_error: error, recipients },
+      now,
+    ),
+  ]);
 }
 
 /** A 403 counts as lost access only when sites.list confirms the property is gone; otherwise it is retried. */
@@ -396,14 +422,14 @@ async function propertySucceeded(sql: Sql, propertyId: string, now: number, data
 }
 
 /** When no backfill run is left queued or running, the property's backfill is done (or failed if any run failed). */
-async function settleBackfill(sql: Sql, property: Property, now: number): Promise<void> {
+async function settleBackfill(sql: Sql, property: Property, now: number): Promise<"done" | "failed" | null> {
   const open = await sql.get<{ n: number }>(
     "SELECT count(*) AS n FROM search_sync_runs WHERE property_id = ? AND kind = 'backfill' AND status IN ('queued', 'running')",
     [property.id],
   );
-  if ((open?.n ?? 0) > 0) return;
+  if ((open?.n ?? 0) > 0) return null;
   const current = await sql.get<{ backfill_state: string }>("SELECT backfill_state FROM search_properties WHERE id = ?", [property.id]);
-  if (current?.backfill_state !== "running") return;
+  if (current?.backfill_state !== "running") return null;
   const failed = await sql.get<{ n: number }>(
     "SELECT count(*) AS n FROM search_sync_runs WHERE property_id = ? AND kind = 'backfill' AND status = 'failed'",
     [property.id],
@@ -423,6 +449,53 @@ async function settleBackfill(sql: Sql, property: Property, now: number): Promis
       now,
     ),
   ]);
+  return state;
+}
+
+/**
+ * After a daily Search Analytics job lands: when every daily job of that plan (same property, same created_at) is done
+ * and none failed, tell the client's agents once (search.data_updated). A plan with a failed job sends nothing.
+ */
+async function settleDaily(deps: SyncDeps, property: Property, runId: string, now: number): Promise<void> {
+  const run = await deps.sql.get<{ created_at: number }>("SELECT created_at FROM search_sync_runs WHERE id = ?", [runId]);
+  if (!run) return;
+  const counts = await deps.sql.get<{ open: number | null; failed: number | null }>(
+    `SELECT SUM(CASE WHEN status IN ('queued', 'running') THEN 1 ELSE 0 END) AS open,
+            SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed
+     FROM search_sync_runs WHERE property_id = ? AND kind = 'daily' AND created_at = ?`,
+    [property.id, run.created_at],
+  );
+  if ((counts?.open ?? 0) > 0 || (counts?.failed ?? 0) > 0) return;
+  await recordSearchDataUpdated(
+    { sql: deps.sql, searchSql: deps.searchSql },
+    {
+      organizationId: property.organization_id,
+      propertyId: property.id,
+      siteUrl: property.site_url,
+      runKey: `daily:${property.id}:${run.created_at}`,
+      mode: "daily",
+      now,
+    },
+  );
+}
+
+/** A backfill that finished with no failed day: one search.data_updated for it, keyed by the backfill plan. */
+async function announceBackfill(deps: SyncDeps, property: Property, now: number): Promise<void> {
+  const plan = await deps.sql.get<{ created_at: number | null }>(
+    "SELECT MAX(created_at) AS created_at FROM search_sync_runs WHERE property_id = ? AND kind = 'backfill'",
+    [property.id],
+  );
+  await recordSearchDataUpdated(
+    { sql: deps.sql, searchSql: deps.searchSql },
+    {
+      organizationId: property.organization_id,
+      propertyId: property.id,
+      siteUrl: property.site_url,
+      runKey: `backfill:${property.id}:${plan?.created_at ?? now}`,
+      mode: "backfill",
+      now,
+    },
+  );
 }
 
 // ---------- Jobs ----------
@@ -529,7 +602,11 @@ async function runAnalytics(job: AnalyticsJob, property: Property, deps: SyncDep
   const finished = deps.now();
   await finishRun(deps.sql, job.runId, "done", finished, { rows: written, calls: counter.calls });
   await propertySucceeded(deps.sql, property.id, finished, job.request === "site" && isFinal ? job.day : undefined);
-  if (job.backfill) await settleBackfill(deps.sql, property, finished);
+  if (job.backfill) {
+    if ((await settleBackfill(deps.sql, property, finished)) === "done") await announceBackfill(deps, property, finished);
+  } else {
+    await settleDaily(deps, property, job.runId, finished);
+  }
 }
 
 async function runSitemaps(job: SitemapsJob, property: Property, deps: SyncDeps): Promise<void> {
@@ -591,6 +668,17 @@ async function runSitemaps(job: SitemapsJob, property: Property, deps: SyncDeps)
   await propertySucceeded(deps.sql, property.id, finished);
 }
 
+/** Agent re-check asks for this property from the last 7 days (activities search.inspect_requested), newest first. */
+async function inspectionRequests(sql: Sql, property: Property, now: number): Promise<{ url: string; at: number }[]> {
+  const rows = await sql.all<{ url: string | null; created_at: number }>(
+    `SELECT json_extract(data_json, '$.url') AS url, created_at FROM activities
+     WHERE organization_id = ? AND kind = 'search.inspect_requested' AND json_extract(data_json, '$.property_id') = ? AND created_at >= ?
+     ORDER BY created_at DESC LIMIT 100`,
+    [property.organization_id, property.id, now - 7 * 86_400_000],
+  );
+  return rows.filter((row): row is { url: string; created_at: number } => typeof row.url === "string").map((row) => ({ url: row.url, at: row.created_at }));
+}
+
 async function runInspect(job: InspectJob, property: Property, deps: SyncDeps): Promise<void> {
   if ((await runStatus(deps.sql, job.runId)) === "done") return;
   const now = deps.now();
@@ -602,7 +690,13 @@ async function runInspect(job: InspectJob, property: Property, deps: SyncDeps): 
   );
   const remaining = property.inspect_budget - (used?.n ?? 0);
   const candidates = remaining > 0
-    ? await pickInspectionCandidates({ sql: deps.searchSql, propertyId: property.id, now, limit: Math.min(remaining, INSPECT_PER_MESSAGE) })
+    ? await pickInspectionCandidates({
+        sql: deps.searchSql,
+        propertyId: property.id,
+        now,
+        limit: Math.min(remaining, INSPECT_PER_MESSAGE),
+        requested: await inspectionRequests(deps.sql, property, now),
+      })
     : [];
   const counter = { calls: 0 };
   const gsc = deps.gsc(counter);

@@ -2,12 +2,28 @@ import { AgentWorkError, runAgentWork } from "@/db/agent-work";
 import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import { openSearchDb } from "@/db/open-search";
+import { loadAgentSearch, parseAgentRange } from "@/lib/search/agent-search";
+import { clientRef, noteRead } from "@/lib/search/agent-search-api";
+import { agentSearchOrg } from "@/lib/search/agent-search-cards";
+import { agentForToken, type AgentPrincipal } from "@/lib/agent-work-filing";
 import { clientContext, getBrief, listFeedback, liveOrganization, organizationWorkspaceIds, workspaceInOrganization } from "@/lib/agent-context";
 import { understanderFromRuntime } from "@/lib/ai-gateway";
 import { listFileReads, principalForKnowledgeKey, searchSpace, type KnowledgePrincipal } from "@/lib/knowledge";
 import type { Sql } from "@/db/sql";
 
 const PROTOCOL = "2025-03-26";
+
+/**
+ * Who called. workspace: a project key (one space). agent: the ClientAgent deployment key (work scope, no organization),
+ * which is shared by every client's ClientAgent and so is NOT bound to any client. hq_agent: an HQ agent token (caw_),
+ * bound to the clients it is assigned to, the same principal and scoping as GET /api/agent-search.
+ */
+type McpPrincipal = KnowledgePrincipal | { kind: "hq_agent"; agent: AgentPrincipal };
+
+/** Refusal for search data from a key with no client binding (QA on PR #235: no cross-client reads). */
+const SEARCH_NEEDS_BINDING =
+  "search_console needs a client binding. This key is not bound to a client; call it with an HQ agent token assigned to the client, or use GET /api/agent-search.";
 
 type ToolArgs = {
   query?: string;
@@ -20,6 +36,8 @@ type ToolArgs = {
   executionId?: string;
   status?: string;
   body?: string;
+  propertyId?: string;
+  range?: string;
 };
 
 type Rpc = {
@@ -229,6 +247,24 @@ function rpcResult(id: unknown, result: unknown, status = 200): Response {
   return Response.json({ jsonrpc: "2.0", id: id ?? null, result }, { status });
 }
 
+
+/** An HQ agent token gets only the search read here, scoped to its assigned clients. */
+const HQ_AGENT_TOOLS = [
+  {
+    name: "search_console",
+    description:
+      "Read synced Google Search Console data for a client this agent token is assigned to (read-only, staff-only numbers): per property the status, last sync, totals with change vs the previous period, top queries and pages, and opportunities (low CTR, striking distance, click drops). range: 7d, 28d (default), 90d, 16m. Another client's id or property is refused.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: { type: "string", description: "The client: org id, domain, or space slug. May be left out when this agent has exactly one client." },
+        propertyId: { type: "string" },
+        range: { type: "string", enum: ["7d", "28d", "90d", "16m"] },
+      },
+    },
+  },
+];
+
 function rpcError(id: unknown, code: number, message: string, status = 200): Response {
   return Response.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, { status });
 }
@@ -276,7 +312,27 @@ async function searchWorkspaces(
   return hits.slice(0, 8);
 }
 
-async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, args: ToolArgs, id: unknown): Promise<Response> {
+/** HQ agent token: search_console only, for a client the agent is assigned to (agentSearchOrg, as in the REST routes). */
+async function callHqAgentTool(sql: Sql, agent: AgentPrincipal, name: string, args: ToolArgs, id: unknown): Promise<Response> {
+  if (name !== "search_console") return rpcError(id, -32001, "An HQ agent token can only call search_console here.", 403);
+  const range = parseAgentRange(args.range);
+  if (range === undefined) return rpcError(id, -32602, "range must be 7d, 28d, 90d, or 16m.");
+  const scope = await agentSearchOrg(sql, agent, clientRef(args.organizationId));
+  if (!scope.ok) return rpcError(id, -32001, scope.message, scope.status);
+  const now = Date.now();
+  const loaded = await loadAgentSearch(sql, await openSearchDb(), {
+    organizationId: scope.organizationId,
+    propertyId: args.propertyId?.trim() || null,
+    range,
+    now,
+  });
+  if (!loaded.ok) return rpcError(id, -32001, loaded.message, loaded.status);
+  await noteRead(sql, agent, scope.organizationId, now).catch(() => undefined);
+  return rpcResult(id, jsonText(loaded.result));
+}
+
+async function callTool(sql: Sql, principal: McpPrincipal, name: string, args: ToolArgs, id: unknown): Promise<Response> {
+  if (principal.kind === "hq_agent") return callHqAgentTool(sql, principal.agent, name, args, id);
   if (WORK_TOOLS.has(name)) {
     const scopes = principal.kind === "agent" ? principal.scopes : [];
     if (!scopes.includes("work")) return rpcError(id, -32001, "This key cannot change records.", 403);
@@ -286,7 +342,7 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
 
   if (principal.kind === "workspace") {
     if (args.organizationId) return rpcError(id, -32001, "A project key stays on its space.", 403);
-    if (name === "client_context" || name === "get_brief" || name === "list_feedback") {
+    if (name === "client_context" || name === "get_brief" || name === "list_feedback" || name === "search_console") {
       return rpcError(id, -32001, "A project key stays on its space.", 403);
     }
     if (name === "list_files") {
@@ -304,6 +360,9 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
     }
     return rpcError(id, -32602, "Unknown tool.");
   }
+
+  // The deployment key is shared by every client's ClientAgent, so it is bound to no client: it never reads search data.
+  if (name === "search_console") return rpcError(id, -32001, SEARCH_NEEDS_BINDING, 403);
 
   const organizationId = args.organizationId?.trim() ?? "";
   if (!organizationId) return rpcError(id, -32602, "Name an organization.");
@@ -325,7 +384,8 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
       throw error;
     }
   }
-  if (name === "client_context") return rpcResult(id, jsonText(await clientContext(sql, organizationId)));
+  // The ClientAgent writes to the client: no staff-only sections (search) in its context, enforced by caller.
+  if (name === "client_context") return rpcResult(id, jsonText(await clientContext(sql, organizationId, { caller: "client_agent" })));
   if (name === "get_brief") {
     if (args.kind !== "brief" && args.kind !== "design_system") return rpcError(id, -32602, "Kind must be brief or design_system.");
     return rpcResult(id, jsonText(await getBrief(sql, organizationId, args.kind)));
@@ -346,7 +406,10 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
   return rpcError(id, -32602, "Unknown tool.");
 }
 
-/** Stateless JSON-RPC. A project key sees one space. A deployment key sees one named organization. */
+/**
+ * Stateless JSON-RPC. A project key sees one space. A deployment key sees one named organization (no search data).
+ * An HQ agent token (caw_) sees search_console for its assigned clients only.
+ */
 export async function handleMcpRequest(request: Request): Promise<Response> {
   if (request.method !== "POST") return rpcError(null, -32600, "Use POST.", 405);
   let body: Rpc;
@@ -357,7 +420,10 @@ export async function handleMcpRequest(request: Request): Promise<Response> {
   }
   const sql = await openHandoffDb();
   await migrate(sql);
-  const principal = await principalForKnowledgeKey(sql, bearer(request));
+  const token = bearer(request);
+  const knowledge = await principalForKnowledgeKey(sql, token);
+  const hqAgent = knowledge ? null : await agentForToken(sql, `Bearer ${token}`);
+  const principal: McpPrincipal | null = knowledge ?? (hqAgent ? { kind: "hq_agent", agent: hqAgent } : null);
   if (!principal) return rpcError(body.id, -32001, "That project key does not work.", 401);
   if (body.method === "notifications/initialized") return new Response(null, { status: 202 });
   if (body.method === "initialize") {
@@ -368,7 +434,7 @@ export async function handleMcpRequest(request: Request): Promise<Response> {
     });
   }
   if (body.method === "tools/list") {
-    return rpcResult(body.id, { tools: principal.kind === "agent" ? AGENT_TOOLS : SPACE_TOOLS });
+    return rpcResult(body.id, { tools: principal.kind === "agent" ? AGENT_TOOLS : principal.kind === "hq_agent" ? HQ_AGENT_TOOLS : SPACE_TOOLS });
   }
   if (body.method !== "tools/call") return rpcError(body.id, -32601, "Unknown method.");
   return callTool(sql, principal, body.params?.name ?? "", body.params?.arguments ?? {}, body.id);

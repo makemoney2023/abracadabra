@@ -477,3 +477,95 @@ describe("queue consumer: sitemaps and URL Inspection", () => {
     ]);
   });
 });
+
+describe("queue consumer: agents hear about new data (search.data_updated)", () => {
+  async function withLead(sql: Sql) {
+    const { registerClientAgent } = await import("@/lib/agent-work-filing");
+    const made = await registerClientAgent(sql, { agentId: "a-lead", label: "a-lead", organizationId: "org-a", role: "lead", actor: "test", now: NOW });
+    expect(made.ok).toBe(true);
+  }
+  const events = (sql: Sql) =>
+    sql.all<{ organization_id: string; body: string; data_json: string }>(
+      "SELECT organization_id, body, data_json FROM activities WHERE kind = 'search.data_updated' ORDER BY created_at",
+    );
+
+  it("fires once when every daily job of a run is done, addressed to the lead", async () => {
+    const { sql, searchSql } = await databases();
+    await property(sql, "prop-a", { site: "sc-domain:prop-a.com" });
+    await withLead(sql);
+    const { deps: d, sent } = deps({ sql, searchSql }, google());
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "daily" })], d);
+    const analytics = sent.filter((entry) => entry.body.kind === "analytics");
+    // All but the last job: nothing yet.
+    for (const entry of analytics.slice(0, -1)) await handleSearchSyncBatch([message(entry.body)], d);
+    expect(await events(sql)).toEqual([]);
+    await handleSearchSyncBatch([message(analytics.at(-1)!.body)], d);
+    const [event] = await events(sql);
+    expect(event.organization_id).toBe("org-a");
+    const data = JSON.parse(event.data_json) as { mode: string; property_id: string; recipients: string[]; run: string; data_through: string };
+    expect(data).toMatchObject({ mode: "daily", property_id: "prop-a", recipients: ["a-lead"], data_through: "2026-10-20" });
+    expect(data.run).toMatch(/^daily:prop-a:\d+$/);
+    // Redelivered jobs and the rest of the run (sitemaps, inspection, retention) add nothing.
+    for (const entry of analytics) await handleSearchSyncBatch([message(entry.body)], d);
+    sent.length = 0;
+    expect(await events(sql)).toHaveLength(1);
+  });
+
+  it("does not fire for a run with a failed job", async () => {
+    const { sql, searchSql } = await databases();
+    await property(sql, "prop-a");
+    await withLead(sql);
+    let failNext = true;
+    const fake = google({
+      fail: () => {
+        if (!failNext) return null;
+        failNext = false;
+        return new SearchApiError("bad_request", 400, "INVALID_ARGUMENT");
+      },
+    });
+    const { deps: d, sent } = deps({ sql, searchSql }, fake);
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "daily" })], d);
+    const analytics = sent.filter((entry) => entry.body.kind === "analytics");
+    for (const entry of analytics) await handleSearchSyncBatch([message(entry.body)], d);
+    expect(await sql.get("SELECT count(*) AS n FROM search_sync_runs WHERE kind = 'daily' AND status = 'failed'")).toEqual({ n: 1 });
+    expect(await events(sql)).toEqual([]);
+  });
+
+  it("fires again for the next run, and once when a backfill finishes cleanly", async () => {
+    const { sql, searchSql } = await databases();
+    await property(sql, "prop-a", { backfill: "none" });
+    let clock = NOW;
+    const { deps: d, sent } = deps({ sql, searchSql }, google(), { now: () => clock });
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "daily" })], d);
+    await drain(d, sent);
+    clock = NOW + 86_400_000;
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "daily" })], d);
+    await drain(d, sent);
+    expect((await events(sql)).map((row) => (JSON.parse(row.data_json) as { mode: string }).mode)).toEqual(["daily", "daily"]);
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "backfill" })], d);
+    await drain(d, sent, 10_000);
+    const modes = (await events(sql)).map((row) => (JSON.parse(row.data_json) as { mode: string; recipients: string[] }));
+    expect(modes.map((row) => row.mode)).toEqual(["daily", "daily", "backfill"]);
+    // No agent assigned: the event is still written (latest_update), with no one to dispatch to.
+    expect(modes[2].recipients).toEqual([]);
+  });
+});
+
+describe("queue consumer: failure alert", () => {
+  it("writes one search.sync_failing at three failures in a row, for staff and the lead", async () => {
+    const { sql, searchSql } = await databases();
+    await property(sql, "prop-a");
+    const { registerClientAgent, agentForToken } = await import("@/lib/agent-work-filing");
+    const made = await registerClientAgent(sql, { agentId: "a-lead", label: "a-lead", organizationId: "org-a", role: "lead", actor: "test", now: NOW });
+    const { deps: d, sent } = deps({ sql, searchSql }, google({ fail: () => new SearchApiError("server", 503, "UNAVAILABLE") }));
+    await handleSearchSyncBatch([message({ v: 1, kind: "plan", propertyId: "prop-a", mode: "daily" })], d);
+    const jobs = sent.filter((entry) => entry.body.kind === "analytics").slice(0, 5);
+    for (const entry of jobs) await handleSearchSyncBatch([message(entry.body)], d);
+    const alerts = await sql.all<{ body: string; data_json: string }>("SELECT body, data_json FROM activities WHERE kind = 'search.sync_failing'");
+    expect(alerts).toHaveLength(1);
+    expect(JSON.parse(alerts[0].data_json)).toMatchObject({ property_id: "prop-a", failures: 3, recipients: ["a-lead"] });
+    const { listAgentDispatches } = await import("@/lib/agent-dispatch");
+    const lead = await agentForToken(sql, `Bearer ${made.ok ? made.token : ""}`);
+    expect((await listAgentDispatches(sql, lead!)).map((row) => row.reason)).toEqual(["search_failing"]);
+  });
+});

@@ -150,6 +150,8 @@ export async function handOverWaitingTasks(
 
 export type DispatchRow = {
   id: string;
+  /** dispatch: a card handed to this agent. search_update: fresh Search Console data for a client (no card yet). */
+  kind: "dispatch" | "search_update";
   organization_id: string;
   project_id: string | null;
   task_id: string | null;
@@ -159,6 +161,14 @@ export type DispatchRow = {
   note: string | null;
   /** Packs attached to the card now, and how to browse the library and attach more. */
   skills: { attached: string[]; library: string; guide: string; attach: string };
+  /** search_update only: the property, the newest day, the top opportunities, and where to read the rest. */
+  search?: {
+    property_id: string | null;
+    site_url: string | null;
+    data_through: string | null;
+    opportunities: unknown[];
+    read: string;
+  };
   created_at: string;
 };
 
@@ -180,6 +190,7 @@ export async function listAgentDispatches(sql: Sql, agent: AgentPrincipal, since
     const taskId = typeof data.task_id === "string" ? data.task_id : null;
     out.push({
       id: row.id,
+      kind: "dispatch",
       organization_id: row.organization_id,
       project_id: row.project_id,
       task_id: taskId,
@@ -191,5 +202,55 @@ export async function listAgentDispatches(sql: Sql, agent: AgentPrincipal, since
       created_at: new Date(row.created_at).toISOString(),
     });
   }
-  return out;
+  out.push(...(await searchUpdatesFor(sql, agent, orgs, since)));
+  return out.sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 100);
+}
+
+/**
+ * search.data_updated events (written once per finished Search Console sync run) and search.sync_failing alerts (3
+ * failures in a row) addressed to this agent on clients it is still assigned to, as dispatch rows of kind
+ * search_update (reason search_data or search_failing). Newest 20.
+ */
+async function searchUpdatesFor(sql: Sql, agent: AgentPrincipal, orgs: string[], since: number): Promise<DispatchRow[]> {
+  const marks = orgs.map(() => "?").join(", ");
+  const rows = await sql.all<{ id: string; organization_id: string; kind: string; body: string; data_json: string; created_at: number }>(
+    `SELECT id, organization_id, kind, body, data_json, created_at FROM activities
+     WHERE kind IN ('search.data_updated', 'search.sync_failing') AND organization_id IN (${marks}) AND created_at > ?
+       AND EXISTS (SELECT 1 FROM json_each(activities.data_json, '$.recipients') WHERE value = ?)
+     ORDER BY created_at DESC LIMIT 20`,
+    [...orgs, since, agent.agentId],
+  );
+  return rows.map((row) => {
+    let data: Record<string, unknown> = {};
+    try {
+      data = JSON.parse(row.data_json) as Record<string, unknown>;
+    } catch {
+      data = {};
+    }
+    const str = (value: unknown) => (typeof value === "string" ? value : null);
+    const propertyId = str(data.property_id);
+    return {
+      id: row.id,
+      kind: "search_update" as const,
+      organization_id: row.organization_id,
+      project_id: null,
+      task_id: null,
+      deliverable_id: null,
+      reason: row.kind === "search.sync_failing" ? "search_failing" : "search_data",
+      title: row.body,
+      note:
+        row.kind === "search.sync_failing"
+          ? "The Search Console sync keeps failing for this property; the data may be stale. Tell Client Services if it does not recover; do not contact the client."
+          : "Read the full picture with GET /api/agent-search, then turn the opportunities worth doing into cards with POST /api/agent-search/cards.",
+      skills: skillHint("<task id>", []),
+      search: {
+        property_id: propertyId,
+        site_url: str(data.site_url),
+        data_through: str(data.data_through),
+        opportunities: Array.isArray(data.opportunities) ? data.opportunities : [],
+        read: `/api/agent-search?client=${row.organization_id}${propertyId ? `&property=${propertyId}` : ""}`,
+      },
+      created_at: new Date(row.created_at).toISOString(),
+    };
+  });
 }

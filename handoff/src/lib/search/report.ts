@@ -158,7 +158,7 @@ const ORDER: Record<SearchSort, string> = {
 };
 
 /** Missing tables mean s0001 has not run yet on handoff-search (it runs on the first real sync batch). */
-function isMissingTable(error: unknown): boolean {
+export function isMissingTable(error: unknown): boolean {
   return error instanceof Error && /no such table/i.test(error.message);
 }
 
@@ -232,6 +232,10 @@ export async function loadSearchReport(
     range: SearchRangeId;
     sort?: SearchSort;
     now: number;
+    /** Custom dates (agent API): replaces the window the range would give. Already clamped by the caller. */
+    window?: (anchor: string) => SearchWindow;
+    /** Agent API default: end on the newest final day, leaving out the last ~3 days Google may still change. */
+    finalOnly?: boolean;
   },
 ): Promise<SearchReport> {
   if (!searchSql) return { state: "unavailable", reason: "no_db" };
@@ -242,13 +246,17 @@ export async function loadSearchReport(
   const sort = input.sort ?? "clicks";
   const yesterday = dayOf(input.now - DAY_MS);
   try {
-    const latest = await searchSql.get<{ day: string | null }>(
-      `SELECT MAX(day) AS day FROM search_daily_site
-       WHERE organization_id = ? AND property_id = ? AND search_type = 'web' AND day <= ?`,
-      [scope.organizationId, scope.propertyId, yesterday],
-    );
+    const newest = (finalOnly: boolean) =>
+      searchSql.get<{ day: string | null }>(
+        `SELECT MAX(day) AS day FROM search_daily_site
+         WHERE organization_id = ? AND property_id = ? AND search_type = 'web' AND day <= ?${finalOnly ? " AND is_final = 1" : ""}`,
+        [scope.organizationId, scope.propertyId, yesterday],
+      );
+    // Final only: end on the newest day Google has finalized; with none yet, fall back to the newest day there is.
+    let latest = await newest(Boolean(input.finalOnly));
+    if (input.finalOnly && !latest?.day) latest = await newest(false);
     const anchor = latest?.day && ISO_DAY.test(latest.day) ? latest.day : yesterday;
-    const window = searchWindow(input.range, anchor);
+    const window = input.window ? input.window(anchor) : searchWindow(input.range, anchor);
     if (!latest?.day) return { state: "empty", window };
     const [totals, previous, seriesRows, queries, pages] = await Promise.all([
       siteTotals(searchSql, scope, window.current),
