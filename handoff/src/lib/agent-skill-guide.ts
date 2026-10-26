@@ -79,6 +79,22 @@ needs, the way you choose a skill, then create the card with that agent as its a
   POST $HQ/api/agent-board/tasks/<card id>   {"action":"move","to":"doing"}
 Pick from the descriptions. If none fits, keep the card yourself and say so in its note. The function agent then searches the library for its own skills.
 
+## Search Console data (SEO and leads)
+
+HQ syncs each client's Google Search Console data daily. Read it, then turn what is worth doing into cards. Read-only; you never need a Google key.
+  GET $HQ/api/agent-search?client=<organization id | domain | space slug>[&property=<id>][&range=7d|28d|90d|16m]
+    Per property: state (ok, empty, pending, unavailable), last_sync_at, data_through, totals and change vs the previous period,
+    top queries and pages, and opportunities (low_ctr, striking_distance, query_drop, page_drop, site_drop) with an id each.
+    Dates: range=, or start=&end= (YYYY-MM-DD), compare=previous|yoy|none; windows end on the newest finalized day unless include_partial=1.
+  GET $HQ/api/agent-search/rows?client=<...>&dimension=query|page|query_page|country|device|country_device   (filters, limit up to 1000, cursor)
+  GET $HQ/api/agent-search/indexing?client=<...>[&url=]   (stored URL Inspection results and sitemaps; never calls Google)
+  POST $HQ/api/agent-search/inspect   {"client":"<domain>","urls":["https://..."]}   (up to 20 re-checks per property per day, next daily pass)
+  New data: when a sync finishes (or fails 3 times in a row), the lead and any SEO agent on the client get a search_update entry in GET $HQ/api/agent-work?dispatches=1.
+  POST $HQ/api/agent-search/cards   {"client":"<domain>","opportunity_id":"low_ctr:1a2b3c4d","note":"<your plan>","assignee":"<agent_id>"}
+    Makes a card on the client's HQ board with the evidence. At most 5 search cards per client per UTC day (429), one open card per
+    opportunity (409 with task_id). Nothing is published or sent to the client. Numbers are staff-only: never quote them to the client.
+  Skill: abracadabra/seo-geo-aeo/search-console-in-hq/SKILL.md
+
 ## Scheduling a social post (only if staff turned it on for you)
 
 A function agent can schedule or publish a LinkedIn post only when staff turned that on for you on this client. It is off by default;

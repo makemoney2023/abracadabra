@@ -2,6 +2,8 @@ import { AgentWorkError, runAgentWork } from "@/db/agent-work";
 import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import { openSearchDb } from "@/db/open-search";
+import { loadAgentSearch, parseAgentRange } from "@/lib/search/agent-search";
 import { clientContext, getBrief, listFeedback, liveOrganization, organizationWorkspaceIds, workspaceInOrganization } from "@/lib/agent-context";
 import { understanderFromRuntime } from "@/lib/ai-gateway";
 import { listFileReads, principalForKnowledgeKey, searchSpace, type KnowledgePrincipal } from "@/lib/knowledge";
@@ -20,6 +22,8 @@ type ToolArgs = {
   executionId?: string;
   status?: string;
   body?: string;
+  propertyId?: string;
+  range?: string;
 };
 
 type Rpc = {
@@ -86,6 +90,20 @@ const AGENT_TOOLS = [
     name: "client_context",
     description: "Read one live client's organization, deal, scores, spaces, and open work.",
     inputSchema: { type: "object", properties: { organizationId: organizationField }, required: ["organizationId"] },
+  },
+  {
+    name: "search_console",
+    description:
+      "Read one live client's synced Google Search Console data (read-only, staff-only numbers): per property the status, last sync, totals with change vs the previous period, top queries and pages, and opportunities (low CTR, striking distance, click drops). range: 7d, 28d (default), 90d, 16m.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        propertyId: { type: "string" },
+        range: { type: "string", enum: ["7d", "28d", "90d", "16m"] },
+      },
+      required: ["organizationId"],
+    },
   },
   {
     name: "get_brief",
@@ -286,7 +304,7 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
 
   if (principal.kind === "workspace") {
     if (args.organizationId) return rpcError(id, -32001, "A project key stays on its space.", 403);
-    if (name === "client_context" || name === "get_brief" || name === "list_feedback") {
+    if (name === "client_context" || name === "get_brief" || name === "list_feedback" || name === "search_console") {
       return rpcError(id, -32001, "A project key stays on its space.", 403);
     }
     if (name === "list_files") {
@@ -325,7 +343,19 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
       throw error;
     }
   }
-  if (name === "client_context") return rpcResult(id, jsonText(await clientContext(sql, organizationId)));
+  if (name === "client_context") return rpcResult(id, jsonText(await clientContext(sql, organizationId, { searchSql: await openSearchDb() })));
+  if (name === "search_console") {
+    const range = parseAgentRange(args.range);
+    if (range === undefined) return rpcError(id, -32602, "range must be 7d, 28d, 90d, or 16m.");
+    const loaded = await loadAgentSearch(sql, await openSearchDb(), {
+      organizationId,
+      propertyId: args.propertyId?.trim() || null,
+      range,
+      now: Date.now(),
+    });
+    if (!loaded.ok) return rpcError(id, -32602, loaded.message);
+    return rpcResult(id, jsonText(loaded.result));
+  }
   if (name === "get_brief") {
     if (args.kind !== "brief" && args.kind !== "design_system") return rpcError(id, -32602, "Kind must be brief or design_system.");
     return rpcResult(id, jsonText(await getBrief(sql, organizationId, args.kind)));

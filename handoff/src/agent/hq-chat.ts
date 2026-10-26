@@ -58,6 +58,8 @@ const toolInput = z.object({
   itemIds: z.array(z.string()).optional(),
   accountIds: z.array(z.string()).optional(),
   mode: z.string().optional(),
+  range: z.string().optional(),
+  propertyId: z.string().optional(),
   postType: z.string().optional(),
   startAt: z.string().optional(),
   timezone: z.string().optional(),

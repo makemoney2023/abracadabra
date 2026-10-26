@@ -340,7 +340,7 @@ export function SearchReportView({
       ) : (
         <StateCard icon={<SearchX />} title="No search data yet">
           {property!.status === "active"
-            ? "Google Search Console is connected. Data shows here after the first daily sync (8:30 AM Eastern), and 16 months of history load after that."
+            ? "Google Search Console is connected. Data shows here after the first daily sync (early each morning, around 4:30 AM Eastern), and 16 months of history load after that."
             : `${status.label}. ${status.hint}`}
         </StateCard>
       );
@@ -382,7 +382,7 @@ export function SearchReportView({
       <Card>
         <CardHeader>
           <CardTitle>Clicks and impressions</CardTitle>
-          <CardDescription>Per day. Google can still revise the last three days.</CardDescription>
+          <CardDescription>Per day, up to the newest day Google has finalized. The last two or three days are added once they settle.</CardDescription>
         </CardHeader>
         <CardContent>
           <SearchChart series={report.series} />
@@ -391,7 +391,7 @@ export function SearchReportView({
       <div className="flex flex-col gap-4">
         <TopTable
           title="Top search terms"
-          description={`The top ${TOP_ROWS} by ${SORT_LABEL[sort].toLowerCase()}. Google hides rare terms for privacy.`}
+          description={`The top ${TOP_ROWS} by ${SORT_LABEL[sort].toLowerCase()}. Google hides rare terms for privacy, so this list adds up to less than the totals above.`}
           column="Search term"
           rows={report.queries}
           sort={sort}

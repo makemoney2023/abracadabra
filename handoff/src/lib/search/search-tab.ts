@@ -42,6 +42,7 @@ export async function loadSearchTab(
     range,
     sort,
     now: input.now,
+    finalOnly: true,
   });
   return { properties, property, report, range, sort };
 }

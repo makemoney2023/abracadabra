@@ -24,6 +24,7 @@ export const READ_HQ_TOOLS = [
   "social_overview",
   "list_social_pieces",
   "get_social_cadence",
+  "search_console",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -135,6 +136,11 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     label: "Social pieces",
     description:
       "Finished pieces for one client, with approval and version. Pass deliverableId to limit the list. An empty list is not every piece. Fields: organizationId, deliverableId.",
+  },
+  search_console: {
+    label: "Search Console data",
+    description:
+      "A client's synced Google Search Console data, read-only and staff-only: per property the status (ok, empty, pending, unavailable), last sync, data through, clicks, impressions, CTR and position with change vs the previous period, top queries and pages, and opportunities (low CTR on page 1, striking distance at position 4-20, query and page click drops, site drop). range is 7d, 28d (default), 90d, or 16m. Never quote the numbers to the client as-is. Fields: organizationId, propertyId, range.",
   },
   get_social_cadence: {
     label: "Publishing cadence",

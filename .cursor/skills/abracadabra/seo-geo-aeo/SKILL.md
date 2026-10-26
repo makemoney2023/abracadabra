@@ -11,13 +11,14 @@ metadata:
 
 These are the golden rules for the SEO & Analytics bot and for any agent that writes or audits public web content for Abracadabra or a client. They are brand-agnostic: replace the placeholders with the real site. Abracadabra examples: site `https://abra-ca-dabra.app`, blog at `/blog`, schema product at `https://schema.abra-ca-dabra.app`.
 
-This pack has four skills. Read this one first, then open the one that matches the task:
+This pack has five skills. Read this one first, then open the one that matches the task:
 
 | Skill | Path | Open it when |
 |---|---|---|
 | Content system | `abracadabra/seo-geo-aeo/content-system/SKILL.md` | You are writing or editing a post or page: frontmatter, skeleton, locked terms, quality gate. |
 | Technical stack | `abracadabra/seo-geo-aeo/technical-stack/SKILL.md` | You are building or auditing what the page renders: JSON-LD graph, prerender, robots, sitemap, IndexNow, RSS. |
 | Entity and measurement | `abracadabra/seo-geo-aeo/entity-and-measurement/SKILL.md` | You are doing the off-site half: Search Console, GA4, Bing, Wikidata, listings, Reddit, YouTube, citation tracking. |
+| Search Console in HQ | `abracadabra/seo-geo-aeo/search-console-in-hq/SKILL.md` | A client's search data updated, or you are planning SEO work from it: read `/api/agent-search`, then make cards with `/api/agent-search/cards`. |
 
 ## Thesis
 
