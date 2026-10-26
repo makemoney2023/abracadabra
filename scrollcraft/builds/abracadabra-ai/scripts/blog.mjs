@@ -804,19 +804,26 @@ ${items}
 }
 
 async function writeRedirects(posts) {
+  // Each page answers on its canonical URL only. Blog URLs and /privacy are canonical
+  // without a slash, /about/ with one. The other variant and /index.html 301 to it.
+  // Only the first matching rule applies, so the 200 rewrite never re-enters a 301.
+  const noSlash = (path) => [
+    `${path} ${path}/index.html 200`,
+    `${path}/ ${path} 301`,
+    `${path}/index.html ${path} 301`,
+  ];
+  const withSlash = (path) => [
+    `${path}/ ${path}/index.html 200`,
+    `${path} ${path}/ 301`,
+    `${path}/index.html ${path}/ 301`,
+  ];
   const lines = [
-    "/blog /blog/index.html 200",
-    "/blog/ /blog/index.html 200",
-    ...posts.flatMap((post) => [
-      `/blog/${post.slug} /blog/${post.slug}/index.html 200`,
-      `/blog/${post.slug}/ /blog/${post.slug}/index.html 200`,
-    ]),
+    ...noSlash("/blog"),
+    ...posts.flatMap((post) => noSlash(`/blog/${post.slug}`)),
     "/about/christopher-buzny /about/ 301",
     "/about/christopher-buzny/ /about/ 301",
-    "/about /about/index.html 200",
-    "/about/ /about/index.html 200",
-    "/privacy /privacy/index.html 200",
-    "/privacy/ /privacy/index.html 200",
+    ...withSlash("/about"),
+    ...noSlash("/privacy"),
   ];
   const block = `# blog-redirects\n${lines.join("\n")}\n`;
   const path = join(root, "_redirects");

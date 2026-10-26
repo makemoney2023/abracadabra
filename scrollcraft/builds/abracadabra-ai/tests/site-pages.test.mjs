@@ -310,7 +310,8 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.doesNotMatch(hub, industryNoun);
   assert.equal(existsSync(join(root, "offerings")), false);
   assert.match(read("llms.txt"), /https:\/\/abra-ca-dabra\.app\/services\//);
-  assert.match(read("_redirects"), /\/services\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/index\.html 200/);
+  assert.match(read("_redirects"), /^\/services\/ai-assistants-and-agents\/ \/services\/ai-assistants-and-agents\/index\.html 200$/m);
+  assert.match(read("_redirects"), /^\/services\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/ 301$/m);
   assert.match(read("_redirects"), /\/offerings\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/ 301/);
   assert.match(read("portfolio/milrcorr/index.html"), /Milrcorr/);
   assert.match(read("portfolio/milrcorr/index.html"), /https:\/\/milrcorr\.com/);

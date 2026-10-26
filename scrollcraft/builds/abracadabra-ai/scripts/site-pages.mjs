@@ -339,7 +339,13 @@ function baseGraph(pageNode, extra) {
 
 /** Pages changed on this date carry it as dateModified and sitemap lastmod. */
 const HQ_MODIFIED = "2026-10-23";
-const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/", "/portfolio/super-funnel/"]);
+const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/"]);
+/** Every case page gained "More case studies" links on this date (Search Console indexing fixes). */
+const CASES_MODIFIED = "2026-10-24";
+/** pirx.ca did not change on that date, so it keeps its own date. */
+const caseModified = (slug) => (slug === "pirx" ? MODIFIED : CASES_MODIFIED);
+/** Case pages whose films also play on /films.html, so they link to it. */
+const CASE_FILM_LINKS = new Set(["super-funnel", "strongfoam-crm", "schema", "llm-leverage"]);
 
 function pageNode({ type, id, url, name, description, image, modified = MODIFIED }) {
   const node = {
@@ -869,7 +875,19 @@ async function renderCase(item) {
     if (!page) throw new Error(`Missing service ${slug} for ${item.slug}`);
     return `<li><a href="/services/${esc(slug)}/">${esc(page.short)}</a></li>`;
   }).join("");
-  const relatedHtml = related ? `<h2>Related services</h2><ul>${related}</ul>` : "";
+  // Every case page links to the others, so none depends on the listing alone to be
+  // found (the /portfolio/ listing shows only LISTED_CASE_SLUGS). One short paragraph,
+  // so it adds a few lines on a phone rather than a tall list.
+  // The pirx.ca page skips it: it has a tight phone-height budget and is already the
+  // best-linked case (top nav listing, homepage, AI visibility pages).
+  const otherCases = item.slug === "pirx" ? "" : cases
+    .filter((other) => other.slug !== item.slug)
+    .map((other) => `<a href="/portfolio/${esc(other.slug)}/">${esc(other.name)}</a>`)
+    .join(", ");
+  const films = CASE_FILM_LINKS.has(item.slug)
+    ? `<p class="case-films"><a href="/films.html">Watch the films of the real screens</a></p>`
+    : "";
+  const relatedHtml = `${related ? `<h2>Related services</h2><ul>${related}</ul>` : ""}${films}${otherCases ? `<p class="fine case-more"><strong>More case studies:</strong> ${otherCases}.</p>` : ""}`;
   const html = shell({
     title,
     description,
@@ -886,7 +904,7 @@ async function renderCase(item) {
       name: item.name,
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
-      modified: isSuperFunnel ? HQ_MODIFIED : MODIFIED,
+      modified: caseModified(item.slug),
     }), [crumbList(crumbs), caseAbout(item, url), ...(isSuperFunnel ? sfVideoNodes(SITE, ORG_ID, url) : [])]),
     extraHead: isSuperFunnel ? `<link rel="stylesheet" href="${SF_CSS}">\n` : "",
     body: item.slug === "pirx"
@@ -1201,11 +1219,13 @@ function siteUrls() {
     ...products.map((item) => `/products/${item.slug}/`),
     "/course/llm-leverage/",
     "/start/",
-    "/start/thanks/",
+    // /start/thanks/ is noindex (form confirmation), so it stays out of the sitemap.
   ];
   const site = paths.map((path) => {
     const videos = path === "/portfolio/super-funnel/" ? `\n${sfSitemapVideos(SITE)}` : "";
-    return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>${videos}\n  </url>`;
+    const caseSlug = path.match(/^\/portfolio\/([^/]+)\/$/)?.[1];
+    const lastmod = caseSlug ? caseModified(caseSlug) : CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED;
+    return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${lastmod}</lastmod>${videos}\n  </url>`;
   });
   const glossary = glossarySitemapPaths().map(([path, lastmod]) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`);
   return [...site, ...glossary].join("\n");
@@ -1225,9 +1245,14 @@ function siteRedirects() {
     "/glossary",
     ...publishedTerms().map((term) => termPath(term).replace(/\/$/, "")),
   ];
+  // The canonical URL of every page here ends in a slash. Serve that one and 301 the
+  // no-slash and /index.html variants to it, so each page answers on one URL only
+  // (Search Console "Alternate page with proper canonical tag"). Only the first
+  // matching rule applies, so the 200 rewrite never re-enters the 301s: no loops.
   const rewrites = paths.flatMap((path) => [
-    `${path} ${path}/index.html 200`,
     `${path}/ ${path}/index.html 200`,
+    `${path} ${path}/ 301`,
+    `${path}/index.html ${path}/ 301`,
   ]);
   const moved = [
     "/offerings /services/ 301",
