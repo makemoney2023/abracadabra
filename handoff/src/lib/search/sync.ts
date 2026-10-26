@@ -320,7 +320,7 @@ export const FAILURE_ALERT_AT = 3;
 
 /**
  * After FAILURE_ALERT_AT failed attempts in a row (consecutive_failures, reset by any success), one search.sync_failing
- * activity: staff see it on the client timeline, and the lead and SEO agents get it in GET /api/agent-work?dispatches=1.
+ * activity: staff see it on the client timeline, and the lead and the named search agents (SEARCH_UPDATE_AGENT_IDS) get it in GET /api/agent-work?dispatches=1.
  * Once per streak: only the attempt that reaches the threshold writes it.
  */
 async function alertWhenFailing(sql: Sql, property: Property, error: string, now: number): Promise<void> {

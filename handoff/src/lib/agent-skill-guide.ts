@@ -89,7 +89,7 @@ HQ syncs each client's Google Search Console data daily. Read it, then turn what
   GET $HQ/api/agent-search/rows?client=<...>&dimension=query|page|query_page|country|device|country_device   (filters, limit up to 1000, cursor)
   GET $HQ/api/agent-search/indexing?client=<...>[&url=]   (stored URL Inspection results and sitemaps; never calls Google)
   POST $HQ/api/agent-search/inspect   {"client":"<domain>","urls":["https://..."]}   (up to 20 re-checks per property per day, next daily pass)
-  New data: when a sync finishes (or fails 3 times in a row), the lead and any SEO agent on the client get a search_update entry in GET $HQ/api/agent-work?dispatches=1.
+  New data: when a sync finishes (or fails 3 times in a row), the client's lead and the named search agents on the client (SEO & Analytics) get a search_update entry in GET $HQ/api/agent-work?dispatches=1.
   POST $HQ/api/agent-search/cards   {"client":"<domain>","opportunity_id":"low_ctr:1a2b3c4d","note":"<your plan>","assignee":"<agent_id>"}
     Makes a card on the client's HQ board with the evidence. At most 5 search cards per client per UTC day (429), one open card per
     opportunity (409 with task_id). Nothing is published or sent to the client. Numbers are staff-only: never quote them to the client.

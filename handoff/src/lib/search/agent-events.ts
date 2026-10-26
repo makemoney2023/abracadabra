@@ -4,7 +4,8 @@ import { topOpportunities, type Opportunity } from "./opportunities";
 
 /**
  * "Immediately" (PR 4): when a sync run for a property finishes cleanly, one search.data_updated activity is written
- * for the client, addressed to the agents that act on search data (the lead and any SEO agent assigned to the client).
+ * for the client, addressed to the agents that act on search data (the client's lead plus the named agents in
+ * SEARCH_UPDATE_AGENT_IDS, each only while assigned to that client).
  * Agents see it on their next GET /api/agent-work?dispatches=1 (kind search_update) and in GET /api/agent-search
  * (latest_update). It is staff/agent-only: the kind is not in any client-facing feed.
  * Exactly once per run: the insert is one statement guarded by NOT EXISTS on the run key, so two consumers finishing
@@ -12,8 +13,14 @@ import { topOpportunities, type Opportunity } from "./opportunities";
  */
 
 export const EVENT_OPPORTUNITIES = 5;
-/** Agent ids that always get search updates when they are assigned to the client (besides the lead). */
-const SEARCH_AGENT = /seo/i;
+/**
+ * Agents that get search updates besides the client's lead, by exact id (no name matching). Each one still has to be
+ * assigned to the client: an unassigned agent never gets another client's update. Add an id here to widen the list.
+ */
+export const SEARCH_UPDATE_AGENT_IDS: readonly string[] = [
+  "seo-analytics", // SEO & Analytics: its HQ agent id (client_agents.id, migration 0049, GET /api/agent-agents)
+  "d2ab5c97-81b5-4262-a0cd-59aefe9e020c", // SEO & Analytics bot id named in QA review of PR #235; matches only if HQ uses it
+];
 
 export async function searchUpdateRecipients(sql: Sql, organizationId: string): Promise<string[]> {
   const rows = await sql.all<{ agent_id: string; role: string }>(
@@ -22,7 +29,7 @@ export async function searchUpdateRecipients(sql: Sql, organizationId: string): 
      ORDER BY a.assigned_at`,
     [organizationId],
   );
-  const ids = rows.filter((row) => row.role === "lead" || SEARCH_AGENT.test(row.agent_id)).map((row) => row.agent_id);
+  const ids = rows.filter((row) => row.role === "lead" || SEARCH_UPDATE_AGENT_IDS.includes(row.agent_id)).map((row) => row.agent_id);
   return [...new Set(ids)];
 }
 

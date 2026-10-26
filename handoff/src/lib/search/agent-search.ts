@@ -16,7 +16,8 @@ import {
 
 /**
  * What agents read about a client's Search Console data (PR 4): GET /api/agent-search, the HQ chat tool
- * search_console, and the ClientAgent's MCP tool search_console all return this. Read-only; reuses the PR 3 report
+ * search_console, and the MCP tool search_console (HQ agent token only, scoped to its assigned clients; the ClientAgent
+ * deployment key is refused) all return this. Read-only; reuses the PR 3 report
  * layer (loadSearchReport) and adds opportunities. The caller has already checked that it may see this organization.
  */
 

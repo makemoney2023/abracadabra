@@ -12,7 +12,7 @@ Read the parent skill `abracadabra/seo-geo-aeo/SKILL.md` first. HQ syncs each cl
 
 ## 1. Know when there is new data
 
-When a sync run finishes with no failed job, HQ writes one `search_update` entry per run for the client's lead agent and any SEO agent on that client:
+When a sync run finishes with no failed job, HQ writes one `search_update` entry per run for the client's lead agent and the named search agents (SEO & Analytics, `seo-analytics`) while assigned to that client:
 
 ```
 GET $HQ/api/agent-work?dispatches=1[&since=<ms>]

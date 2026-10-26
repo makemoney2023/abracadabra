@@ -120,8 +120,19 @@ function skillSteps(skillsJson: string | null): { path: string; mode: string; st
 }
 
 /**
- * Staff-only Search Console summary for the client agent's context (PR 4), like the assessment line: only when a
- * property has data. The full read is the search_console tool / GET /api/agent-search.
+ * Who is reading client_context. Staff-only sections (today: search) are added only for HQ staff and HQ-scoped agents
+ * (agent token, assigned to the client). The ClientAgent writes to the client, so it never gets them, whatever the
+ * instruction text says. Unknown or missing caller counts as client_agent.
+ */
+export type ContextCaller = "hq_staff" | "hq_agent" | "client_agent";
+
+export function callerSeesStaffOnly(caller: ContextCaller | undefined): boolean {
+  return caller === "hq_staff" || caller === "hq_agent";
+}
+
+/**
+ * Staff-only Search Console summary (PR 4), like the assessment line: only when a property has data, and only for a
+ * caller that callerSeesStaffOnly allows. The full read is GET /api/agent-search or the HQ search_console tool.
  */
 async function searchContext(sql: Sql, searchSql: Sql | null, organizationId: string, now: number): Promise<Record<string, unknown> | null> {
   try {
@@ -131,7 +142,7 @@ async function searchContext(sql: Sql, searchSql: Sql | null, organizationId: st
     if (withData.length === 0) return null;
     return {
       staffOnly:
-        "Staff only: Search Console numbers for planning. Never quote them to the client. Read more with the search_console tool.",
+        "Staff only: Search Console numbers for planning. Never quote them to the client. Read more with GET /api/agent-search.",
       range: "28d",
       properties: withData.map((row) => ({
         id: row.id,
@@ -160,7 +171,7 @@ async function searchContext(sql: Sql, searchSql: Sql | null, organizationId: st
 export async function clientContext(
   sql: Sql,
   organizationId: string,
-  options: { searchSql?: Sql | null; now?: number } = {},
+  options: { searchSql?: Sql | null; now?: number; caller?: ContextCaller } = {},
 ): Promise<Record<string, unknown>> {
   const organization = await sql.get<{
     id: string;
@@ -299,7 +310,7 @@ export async function clientContext(
     }
   }
 
-  const search = options.searchSql !== undefined ? await searchContext(sql, options.searchSql, organizationId, options.now ?? Date.now()) : null;
+  const search = options.searchSql !== undefined && callerSeesStaffOnly(options.caller) ? await searchContext(sql, options.searchSql, organizationId, options.now ?? Date.now()) : null;
 
   return {
     ...(search ? { search } : {}),
