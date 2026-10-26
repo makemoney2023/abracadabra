@@ -268,7 +268,7 @@ async function reviewOutcomes(sql: Sql, taskIds: string[]): Promise<Map<string, 
     const marks = chunk.map(() => "?").join(", ");
     const rows = await sql.all<{ task_id: string; decision: string | null; created_at: number }>(
       `SELECT json_extract(data_json, '$.taskId') AS task_id, json_extract(data_json, '$.decision') AS decision, created_at
-       FROM activities WHERE kind IN ('client_services.task_review', 'staff.task_review')
+       FROM activities WHERE kind IN ('client_services.task_review', 'staff.task_review', 'client_agent.task_review')
          AND json_extract(data_json, '$.taskId') IN (${marks})`,
       chunk,
     );

@@ -35,7 +35,7 @@
       "author": { "@id": "https://abra-ca-dabra.app/#org" },
       "publisher": { "@id": "https://abra-ca-dabra.app/#org" },
       "datePublished": "2026-09-11",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-24",
       "inLanguage": "en",
       "primaryImageOfPage": { "@type": "ImageObject", "url": "https://abra-ca-dabra.app/assets/schema-home.webp", "width": 1600, "height": 1000 },
       "hasPart": { "@id": "https://abra-ca-dabra.app/walkthrough.html#legs" }
@@ -44,8 +44,33 @@
       "@type": "Organization",
       "@id": "https://abra-ca-dabra.app/#org",
       "name": "Abracadabra AI",
+      "alternateName": [
+        "Abra-ca-dabra",
+        "abra-ca-dabra.app"
+      ],
       "url": "https://abra-ca-dabra.app/",
-      "email": "houdini@abra-ca-dabra.app"
+      "logo": {
+        "@type": "ImageObject",
+        "@id": "https://abra-ca-dabra.app/#logo",
+        "url": "https://abra-ca-dabra.app/assets/icons/icon-512.png",
+        "contentUrl": "https://abra-ca-dabra.app/assets/icons/icon-512.png",
+        "width": 512,
+        "height": 512,
+        "caption": "Abracadabra AI"
+      },
+      "email": "houdini@abra-ca-dabra.app",
+      "slogan": "From thought to working software",
+      "disambiguatingDescription": "Abracadabra AI, at abra-ca-dabra.app, is a studio that designs, builds and runs custom software and AI tools around how a business already works. It makes Schema, the LLM Leverage course and HQ, its client workspace."
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://abra-ca-dabra.app/#website",
+      "url": "https://abra-ca-dabra.app/",
+      "name": "Abra-ca-dabra",
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "inLanguage": "en"
     },
     {
       "@type": "ItemList",
@@ -117,31 +142,46 @@
     .sw-copy { width: auto; }
   }
 
-  /* Static copy for crawlers and for readers without scripts. Hidden once the
-     world mounts; the same three legs are rendered by the engine. */
+  /* Static copy for crawlers and for readers without scripts. With scripts on it
+     sits after the flight's scroll track as the closing section, above the fixed
+     stage (z 10) and copy layer (z 20), level with the chat button (z 30, which
+     comes later in the page so it stays on top), below the route dots and top bar. */
   .sw-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-  .sw-static { max-width: 44rem; margin: 0 auto; padding: 4rem 1.4rem 6rem; font-family: var(--sw-font-body); line-height: 1.5; }
-  .sw-static h2 { font-family: var(--sw-font-display); font-size: 1.6rem; margin: 2rem 0 0.4rem; }
-  .sw-static p { color: var(--sw-ink-soft); margin: 0.4rem 0; }
-  .sw-static a { color: var(--sw-ink); }
+  .sw-about { position: relative; z-index: 30; background: var(--sw-bg); color: var(--sw-ink); font-family: var(--sw-font-body); line-height: 1.55; padding: 6rem max(1.4rem, calc((100vw - 44rem) / 2)) 7rem; border-top: 1px solid rgba(243,238,228,.12); }
+  .sw-about__eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sw-accent); margin: 0; }
+  .sw-about h2 { font-family: var(--sw-font-display); font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1.15; margin: 2.4rem 0 .6rem; }
+  .sw-about h2:first-of-type { margin-top: .6rem; }
+  .sw-about h3 { font-family: var(--sw-font-display); font-size: 1.2rem; margin: 1.8rem 0 .4rem; }
+  .sw-about p { color: var(--sw-ink-soft); margin: .5rem 0; max-width: 40rem; }
+  .sw-about a { color: var(--sw-ink); text-underline-offset: 3px; }
 </style>
 </head>
 <body>
 <div id="top"></div>
 <h1 class="sw-sr">The walkthrough: one continuous flight through Schema and LLM Leverage</h1>
 <div id="world"></div>
-<noscript>
-  <article class="sw-static">
-    <p>One continuous flight through Schema and LLM Leverage, captured from the live screens. Here are the three stops.</p>
-    <h2>Schema: Whether an answer engine can cite the page, in one scan.</h2>
-    <p>A pasted URL is enough. Schema checks whether an answer engine can cite the page with confidence, and shows the machine-readable layer that is missing. <a href="https://schema.abra-ca-dabra.app/">Open Schema</a></p>
-    <h2>LLM Leverage: Lessons that teach the idea, rather than a list of prompts.</h2>
-    <p>The course teaches you to get reliable output from a model, and each lesson pairs the explanation with a practice block. <a href="https://learn.abra-ca-dabra.app">Open the course</a></p>
-    <h2>LLM Leverage Workshops: A workshop series you can run.</h2>
-    <p>The agenda, the takeaways, and the materials for each session live on one page, so the facilitator opens it and starts.</p>
-    <p><a href="mailto:houdini@abra-ca-dabra.app">Start a project</a> or <a href="./">back to the homepage</a>.</p>
-  </article>
-</noscript>
+<!-- Real page text, in the HTML for crawlers and readers without scripts. With scripts
+     on, it follows the flight as the closing section, above the fixed stage. -->
+<main class="sw-about" id="about-the-walkthrough">
+  <p class="sw-about__eyebrow">Walkthrough</p>
+  <h2>A scroll-driven tour of Schema and LLM Leverage</h2>
+  <p>This page is one continuous flight through two things we build and run: Schema, the tool that checks whether an answer engine can cite a page, and LLM Leverage, our course and workshop series on getting reliable output from a model. Every frame is a capture of the live screens, not a mockup. Scroll to move the camera from one stop to the next. There are three stops.</p>
+
+  <h2>What the walkthrough shows</h2>
+  <h3>Schema: whether an answer engine can cite the page, in one scan</h3>
+  <p>A pasted URL is enough. Schema checks whether an answer engine can cite the page with confidence, and shows the machine-readable layer that is missing. The flight shows the Schema scan, captured from the live product.</p>
+  <p><a href="https://schema.abra-ca-dabra.app/">Open Schema</a> · <a href="/products/schema/">About the Schema product</a> · <a href="/portfolio/schema/">The Schema case study</a></p>
+
+  <h3>LLM Leverage: lessons that teach the idea, rather than a list of prompts</h3>
+  <p>The course teaches you to get reliable output from a model, and each lesson pairs the explanation with a practice block. The flight shows a lesson page from the live course.</p>
+  <p><a href="https://learn.abra-ca-dabra.app">Open the course</a> · <a href="/course/llm-leverage/">About the LLM Leverage course</a> · <a href="/portfolio/llm-leverage/">The LLM Leverage case study</a></p>
+
+  <h3>LLM Leverage Workshops: a workshop series you can run</h3>
+  <p>The agenda, the takeaways, and the materials for each session live on one page, so the facilitator opens it and starts. The flight ends on the workshop page.</p>
+
+  <h2>Where to go next</h2>
+  <p>Watch more captures of real screens on the <a href="/films.html">Films page</a>, read the <a href="/portfolio/">case studies</a>, or <a href="/start/">start a project</a>. You can also go <a href="/">back to the homepage</a>.</p>
+</main>
 
 <script src="scroll-world.js"></script>
 <script>

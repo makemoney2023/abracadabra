@@ -173,7 +173,7 @@ async function pickVersion(sql: Sql, deliverable: { id: string; version: number;
     [deliverable.id, deliverable.version],
   );
   const sentBack = await sql.get<{ id: string }>(
-    `SELECT id FROM activities WHERE kind IN ('client_services.task_review', 'staff.task_review')
+    `SELECT id FROM activities WHERE kind IN ('client_services.task_review', 'staff.task_review', 'client_agent.task_review')
        AND json_extract(data_json, '$.taskId') = ? AND json_extract(data_json, '$.decision') != 'approve' AND created_at >= ? LIMIT 1`,
     [taskId, Number(last?.at ?? 0)],
   );

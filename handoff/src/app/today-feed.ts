@@ -113,6 +113,7 @@ const AGENT_WORK = new Set([
   "client_agent.handoff",
   "client_services.task_review",
   "staff.task_review",
+  "client_agent.task_review",
 ]);
 
 const BOARD_MOVES = new Set([
@@ -310,12 +311,16 @@ export function agentWork(events: FeedEvent[]): AgentWorkRow[] {
     if (!AGENT_WORK.has(event.kind)) continue;
     const body = text(event.body);
     const base = { ...scope(event), id: event.id, at: event.createdAt, href: taskHref(event) };
-    if (event.kind === "client_services.task_review" || event.kind === "staff.task_review") {
+    if (event.kind === "client_services.task_review" || event.kind === "staff.task_review" || event.kind === "client_agent.task_review") {
       const decision = text(event.data.decision);
       const title = event.taskTitle || quotedTitle(body) || "a card";
       const approved = decision === "approve";
       const note = text(event.data.note);
-      const override = event.kind === "staff.task_review" ? "Admin override" : "";
+      const override = event.kind === "staff.task_review"
+        ? "Admin override"
+        : event.kind === "client_agent.task_review"
+          ? `Approved by agent ${text(event.data.agent_id) || "unknown"}`
+          : "";
       rows.push({
         ...base,
         decision: approved ? "approved" : "sent_back",
@@ -340,7 +345,7 @@ export function agentWorkStats(
   let sentBack = 0;
   for (const event of events) {
     if (event.kind === "client_agent.work_filed") filed += 1;
-    if (event.kind === "client_services.task_review" || event.kind === "staff.task_review") {
+    if (event.kind === "client_services.task_review" || event.kind === "staff.task_review" || event.kind === "client_agent.task_review") {
       if (text(event.data.decision) === "approve") approved += 1;
       else sentBack += 1;
     }

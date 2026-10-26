@@ -35,6 +35,7 @@ import { writeSchemaAssets } from "./schema-assets.mjs";
 import { glossarySitemapPaths, linkGlossaryMentions, renderGlossary } from "./glossary.mjs";
 import { publishedTerms, termPath } from "./glossary-data.mjs";
 import { assertReadinessCopy } from "./readiness-copy.mjs";
+import { homeOrgNode, orgNode } from "./entity.mjs";
 
 export const SF_CSS = "/assets/sf-case.css?v=20261023b";
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
@@ -78,16 +79,6 @@ function fill(text, start, end, inner) {
   return text.replace(pattern, `${start}\n${inner}\n${end}`);
 }
 
-function orgNode() {
-  return {
-    "@type": "Organization",
-    "@id": ORG_ID,
-    name: "Abracadabra AI",
-    url: `${SITE}/`,
-    email: "houdini@abra-ca-dabra.app",
-    slogan: "From thought to working software",
-  };
-}
 
 function websiteNode() {
   return {
@@ -337,7 +328,13 @@ function baseGraph(pageNode, extra) {
 
 /** Pages changed on this date carry it as dateModified and sitemap lastmod. */
 const HQ_MODIFIED = "2026-10-23";
-const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/", "/portfolio/super-funnel/"]);
+const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/"]);
+/** Every case page gained "More case studies" links on this date (Search Console indexing fixes). */
+const CASES_MODIFIED = "2026-10-24";
+/** pirx.ca did not change on that date, so it keeps its own date. */
+const caseModified = (slug) => (slug === "pirx" ? MODIFIED : CASES_MODIFIED);
+/** Case pages whose films also play on /films.html, so they link to it. */
+const CASE_FILM_LINKS = new Set(["super-funnel", "strongfoam-crm", "schema", "llm-leverage"]);
 
 function pageNode({ type, id, url, name, description, image, modified = MODIFIED }) {
   const node = {
@@ -867,7 +864,19 @@ async function renderCase(item) {
     if (!page) throw new Error(`Missing service ${slug} for ${item.slug}`);
     return `<li><a href="/services/${esc(slug)}/">${esc(page.short)}</a></li>`;
   }).join("");
-  const relatedHtml = related ? `<h2>Related services</h2><ul>${related}</ul>` : "";
+  // Every case page links to the others, so none depends on the listing alone to be
+  // found (the /portfolio/ listing shows only LISTED_CASE_SLUGS). One short paragraph,
+  // so it adds a few lines on a phone rather than a tall list.
+  // The pirx.ca page skips it: it has a tight phone-height budget and is already the
+  // best-linked case (top nav listing, homepage, AI visibility pages).
+  const otherCases = item.slug === "pirx" ? "" : cases
+    .filter((other) => other.slug !== item.slug)
+    .map((other) => `<a href="/portfolio/${esc(other.slug)}/">${esc(other.name)}</a>`)
+    .join(", ");
+  const films = CASE_FILM_LINKS.has(item.slug)
+    ? `<p class="case-films"><a href="/films.html">Watch the films of the real screens</a></p>`
+    : "";
+  const relatedHtml = `${related ? `<h2>Related services</h2><ul>${related}</ul>` : ""}${films}${otherCases ? `<p class="fine case-more"><strong>More case studies:</strong> ${otherCases}.</p>` : ""}`;
   const html = shell({
     title,
     description,
@@ -884,7 +893,7 @@ async function renderCase(item) {
       name: item.name,
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
-      modified: isSuperFunnel ? HQ_MODIFIED : MODIFIED,
+      modified: caseModified(item.slug),
     }), [crumbList(crumbs), caseAbout(item, url), ...(isSuperFunnel ? sfVideoNodes(SITE, ORG_ID, url) : [])]),
     extraHead: isSuperFunnel ? `<link rel="stylesheet" href="${SF_CSS}">\n` : "",
     body: item.slug === "pirx"
@@ -1199,11 +1208,13 @@ function siteUrls() {
     ...products.map((item) => `/products/${item.slug}/`),
     "/course/llm-leverage/",
     "/start/",
-    "/start/thanks/",
+    // /start/thanks/ is noindex (form confirmation), so it stays out of the sitemap.
   ];
   const site = paths.map((path) => {
     const videos = path === "/portfolio/super-funnel/" ? `\n${sfSitemapVideos(SITE)}` : "";
-    return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>${videos}\n  </url>`;
+    const caseSlug = path.match(/^\/portfolio\/([^/]+)\/$/)?.[1];
+    const lastmod = caseSlug ? caseModified(caseSlug) : CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED;
+    return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${lastmod}</lastmod>${videos}\n  </url>`;
   });
   const glossary = glossarySitemapPaths().map(([path, lastmod]) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`);
   return [...site, ...glossary].join("\n");
@@ -1223,9 +1234,14 @@ function siteRedirects() {
     "/glossary",
     ...publishedTerms().map((term) => termPath(term).replace(/\/$/, "")),
   ];
+  // The canonical URL of every page here ends in a slash. Serve that one and 301 the
+  // no-slash and /index.html variants to it, so each page answers on one URL only
+  // (Search Console "Alternate page with proper canonical tag"). Only the first
+  // matching rule applies, so the 200 rewrite never re-enters the 301s: no loops.
   const rewrites = paths.flatMap((path) => [
-    `${path} ${path}/index.html 200`,
     `${path}/ ${path}/index.html 200`,
+    `${path} ${path}/ 301`,
+    `${path}/index.html ${path}/ 301`,
   ]);
   const moved = [
     "/offerings /services/ 301",
@@ -1387,6 +1403,28 @@ async function renderMissing() {
   await writePage("404.html", html);
 }
 
+const ORG_NODE_PATTERN = /    \{\n      "@type": "Organization",\n      "@id": "https:\/\/abra-ca-dabra\.app\/#org"[\s\S]*?\n    \}(?=,?\n)/;
+
+/** Swap the hand-kept #org node in a static page for the shared entity node, so every page agrees. */
+export function replaceOrgNode(html, node, file, { website = null } = {}) {
+  if (!ORG_NODE_PATTERN.test(html)) throw new Error(`Missing Organization #org node in ${file}`);
+  const indent = (value) => JSON.stringify(value, null, 2).replace(/</g, "\\u003c").replace(/^/gm, "    ");
+  // A page that points at #website must also carry the WebSite node, or the reference dangles.
+  const needsWebsite = website && !/"@type": "WebSite",\n\s*"@id": "[^"]*#website"/.test(html);
+  const text = needsWebsite ? `${indent(node)},\n${indent(website)}` : indent(node);
+  return html.replace(ORG_NODE_PATTERN, () => text);
+}
+
+/** The live service pages, in menu order, for the homepage OfferCatalog. */
+function homeServices() {
+  return offerings.map((item) => {
+    const page = salesPages[item.slug];
+    if (!page) throw new Error(`Missing sales page for ${item.slug}`);
+    const url = `${SITE}/services/${item.slug}/`;
+    return { name: page.headline, url, id: `${url}#service` };
+  });
+}
+
 async function patchHome() {
   const path = join(root, "index.html");
   const proof = JSON.parse(await readFile(join(root, "content/proof.json"), "utf8"));
@@ -1397,6 +1435,7 @@ async function patchHome() {
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
   html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
   html = fill(html, "<!-- HQ-VIDEO -->", "<!-- /HQ-VIDEO -->", hqVideoSection());
+  html = replaceOrgNode(html, homeOrgNode(homeServices()), "index.html");
   const videoNode = JSON.stringify(hqVideoNode(SITE, ORG_ID), null, 2).replace(/^/gm, "    ");
   const nodePattern = /    \{\n      "@type": "VideoObject",\n      "@id": "[^"]*#video-hq-product"[\s\S]*?\n    \}(?=,\n)/;
   if (!nodePattern.test(html)) throw new Error("Missing HQ VideoObject node in index.html");
@@ -1424,9 +1463,17 @@ async function patchHome() {
 async function patchFilms() {
   const path = join(root, "films.html");
   let html = await readFile(path, "utf8");
+  html = replaceOrgNode(html, orgNode(), "films.html", { website: websiteNode() });
   html = fill(html, "<!-- SITE-NAV -->", "<!-- /SITE-NAV -->", siteHeader());
   html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter({ band: "compact" }));
   await writeFile(path, smartQuotesHtml(html));
+}
+
+async function patchWalkthrough() {
+  const path = join(root, "walkthrough.html");
+  const html = await readFile(path, "utf8");
+  const next = replaceOrgNode(html, orgNode(), "walkthrough.html", { website: websiteNode() });
+  if (next !== html) await writeFile(path, next);
 }
 
 async function patchSitemap() {
@@ -1477,6 +1524,7 @@ export async function buildSitePages() {
   await renderMissing();
   await patchHome();
   await patchFilms();
+  await patchWalkthrough();
   await renderGlossary({ SITE, ORG_ID, WEBSITE_ID, root, shell, writePage, orgNode, websiteNode, pageNode, esc, visibleCrumbs });
   await linkGlossaryMentions(root);
   await patchSitemap();

@@ -1,4 +1,6 @@
 import type { Sql } from "@/db/sql";
+import { loadAgentSearch } from "@/lib/search/agent-search";
+import { topOpportunities } from "@/lib/search/opportunities";
 import { rulesFromBrief } from "@/lib/channel-plan";
 import { templateOnCard } from "@/lib/swarm-ready";
 
@@ -117,8 +119,60 @@ function skillSteps(skillsJson: string | null): { path: string; mode: string; st
   }
 }
 
+/**
+ * Who is reading client_context. Staff-only sections (today: search) are added only for HQ staff and HQ-scoped agents
+ * (agent token, assigned to the client). The ClientAgent writes to the client, so it never gets them, whatever the
+ * instruction text says. Unknown or missing caller counts as client_agent.
+ */
+export type ContextCaller = "hq_staff" | "hq_agent" | "client_agent";
+
+export function callerSeesStaffOnly(caller: ContextCaller | undefined): boolean {
+  return caller === "hq_staff" || caller === "hq_agent";
+}
+
+/**
+ * Staff-only Search Console summary (PR 4), like the assessment line: only when a property has data, and only for a
+ * caller that callerSeesStaffOnly allows. The full read is GET /api/agent-search or the HQ search_console tool.
+ */
+async function searchContext(sql: Sql, searchSql: Sql | null, organizationId: string, now: number): Promise<Record<string, unknown> | null> {
+  try {
+    const loaded = await loadAgentSearch(sql, searchSql, { organizationId, range: "28d", now });
+    if (!loaded.ok) return null;
+    const withData = loaded.result.properties.filter((row) => row.state === "ok");
+    if (withData.length === 0) return null;
+    return {
+      staffOnly:
+        "Staff only: Search Console numbers for planning. Never quote them to the client. Read more with GET /api/agent-search.",
+      range: "28d",
+      properties: withData.map((row) => ({
+        id: row.id,
+        siteUrl: row.site_url,
+        dataThrough: row.data_through,
+        lastSyncAt: row.last_sync_at,
+        totals: row.totals,
+        change: row.change,
+        topOpportunities: topOpportunities(row.opportunities, 3).map((item) => ({
+          id: item.id,
+          type: item.type,
+          query: item.query,
+          page: item.page,
+          clicksAtStake: item.clicks_at_stake,
+          why: item.why,
+        })),
+      })),
+      latestUpdate: loaded.result.latest_update,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** The picture the HQ agent reads before it writes a brief. Answers stay in the database. */
-export async function clientContext(sql: Sql, organizationId: string): Promise<Record<string, unknown>> {
+export async function clientContext(
+  sql: Sql,
+  organizationId: string,
+  options: { searchSql?: Sql | null; now?: number; caller?: ContextCaller } = {},
+): Promise<Record<string, unknown>> {
   const organization = await sql.get<{
     id: string;
     name: string;
@@ -256,7 +310,10 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
     }
   }
 
+  const search = options.searchSql !== undefined && callerSeesStaffOnly(options.caller) ? await searchContext(sql, options.searchSql, organizationId, options.now ?? Date.now()) : null;
+
   return {
+    ...(search ? { search } : {}),
     organization: {
       id: organization.id,
       name: organization.name,

@@ -11,14 +11,15 @@ import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
 import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { DIAGRAM, writeDiagrams } from "./blog-diagrams.mjs";
+import { ORG_ID as ENTITY_ORG_ID, SITE as ENTITY_SITE, orgNode } from "./entity.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-export const SITE = "https://abra-ca-dabra.app";
+export const SITE = ENTITY_SITE;
 export const CHECK = "https://check.abra-ca-dabra.app/check";
 /** House byline. Change it here and every byline, author box, meta author, and JSON-LD author follows. */
 export const AUTHOR = { name: "Abracadabra Studio", url: "https://abra-ca-dabra.app", id: `${SITE}/#studio` };
 export const AUTHOR_ID = AUTHOR.id;
-export const ORG_ID = `${SITE}/#org`;
+export const ORG_ID = ENTITY_ORG_ID;
 export const WEBSITE_ID = `${SITE}/#website`;
 
 const imageSchema = z.object({
@@ -426,17 +427,6 @@ function graphForPost(post, htmlPath) {
   };
 }
 
-function orgNode() {
-  return {
-    "@type": "Organization",
-    "@id": ORG_ID,
-    name: "Abracadabra AI",
-    url: `${SITE}/`,
-    email: "houdini@abra-ca-dabra.app",
-    slogan: "From thought to working software",
-  };
-}
-
 function websiteNode() {
   return {
     "@type": "WebSite",
@@ -804,19 +794,26 @@ ${items}
 }
 
 async function writeRedirects(posts) {
+  // Each page answers on its canonical URL only. Blog URLs and /privacy are canonical
+  // without a slash, /about/ with one. The other variant and /index.html 301 to it.
+  // Only the first matching rule applies, so the 200 rewrite never re-enters a 301.
+  const noSlash = (path) => [
+    `${path} ${path}/index.html 200`,
+    `${path}/ ${path} 301`,
+    `${path}/index.html ${path} 301`,
+  ];
+  const withSlash = (path) => [
+    `${path}/ ${path}/index.html 200`,
+    `${path} ${path}/ 301`,
+    `${path}/index.html ${path}/ 301`,
+  ];
   const lines = [
-    "/blog /blog/index.html 200",
-    "/blog/ /blog/index.html 200",
-    ...posts.flatMap((post) => [
-      `/blog/${post.slug} /blog/${post.slug}/index.html 200`,
-      `/blog/${post.slug}/ /blog/${post.slug}/index.html 200`,
-    ]),
+    ...noSlash("/blog"),
+    ...posts.flatMap((post) => noSlash(`/blog/${post.slug}`)),
     "/about/christopher-buzny /about/ 301",
     "/about/christopher-buzny/ /about/ 301",
-    "/about /about/index.html 200",
-    "/about/ /about/index.html 200",
-    "/privacy /privacy/index.html 200",
-    "/privacy/ /privacy/index.html 200",
+    ...withSlash("/about"),
+    ...noSlash("/privacy"),
   ];
   const block = `# blog-redirects\n${lines.join("\n")}\n`;
   const path = join(root, "_redirects");

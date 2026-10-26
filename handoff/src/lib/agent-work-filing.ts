@@ -14,6 +14,7 @@ import { failureText, recordCardFailure } from "@/lib/card-automove";
 import { readyMediaBytes } from "@/lib/agent-media";
 import { inspectVideoDataUrl } from "@/lib/video-files";
 import { namedPosterPairs } from "@/lib/video-posters";
+import { cardBriefs, EMPTY_BRIEF, type CardBrief } from "@/lib/card-brief";
 
 /**
  * Work from client agents (Grok Bot teammates and hires) lands in the right client space on its own.
@@ -1011,6 +1012,8 @@ export type WorkContextRow = {
   filed_at: string;
   /** Websites and other built work on this filing (title, live_url, preview_url, repo_url, description, status). */
   built_work?: Record<string, unknown>[];
+  /** The library SKILL.md paths this filing cited (skills_used), as stored. */
+  skills_used: string[];
 };
 
 /**
@@ -1046,10 +1049,11 @@ export async function listAgentContext(
   const rows = await sql.all<{
     id: string; agent_id: string; agent_label: string; kind: string; title: string; summary: string | null; organization_id: string;
     organization_name: string; space_slug: string | null; project_id: string | null; task_id: string | null; handoff_to: string | null;
-    handoff_note: string | null; paths_json: string; links_json: string; filed_at: number;
+    handoff_note: string | null; paths_json: string; links_json: string; filed_at: number; skills_used_json: string | null;
   }>(
     `SELECT i.id, i.agent_id, a.label AS agent_label, i.kind, i.title, i.summary, i.organization_id, o.name AS organization_name,
-            w.slug AS space_slug, i.project_id, i.task_id, i.handoff_to, i.handoff_note, i.paths_json, i.links_json, i.filed_at
+            w.slug AS space_slug, i.project_id, i.task_id, i.handoff_to, i.handoff_note, i.paths_json, i.links_json, i.filed_at,
+            i.skills_used_json
      FROM agent_work_items i
      JOIN client_agents a ON a.id = i.agent_id
      JOIN organizations o ON o.id = i.organization_id
@@ -1068,14 +1072,35 @@ export async function listAgentContext(
       paths: JSON.parse(row.paths_json) as string[],
       links: JSON.parse(row.links_json) as { label: string; url: string }[],
       filed_at: new Date(row.filed_at).toISOString(),
+      skills_used: skillsUsedList(row.skills_used_json),
       paths_json: undefined,
       links_json: undefined,
+      skills_used_json: undefined,
     })) as WorkContextRow[],
   };
 }
 
-/** One filed item with its full summary markdown, if this agent is assigned to that client now. */
-export async function readAgentContextItem(sql: Sql, agent: AgentPrincipal, id: string): Promise<(WorkContextRow & { context_md: string }) | null> {
+function skillsUsedList(raw: string | null): string[] {
+  try {
+    const value = raw ? JSON.parse(raw) : [];
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The card a filing names, with its description, requirements and acceptance criteria. */
+export type FilingCard = { id: string; title: string } & CardBrief;
+
+/**
+ * One filed item with its full summary markdown, the skills it cited, and its card's brief (task: null when it names
+ * no card), if this agent is assigned to that client now.
+ */
+export async function readAgentContextItem(
+  sql: Sql,
+  agent: AgentPrincipal,
+  id: string,
+): Promise<(WorkContextRow & { context_md: string; task: FilingCard | null }) | null> {
   const row = await sql.get<{ organization_id: string | null; context_md: string | null; state: string }>(
     "SELECT organization_id, context_md, state FROM agent_work_items WHERE id = ?",
     [id],
@@ -1084,7 +1109,16 @@ export async function readAgentContextItem(sql: Sql, agent: AgentPrincipal, id: 
   if (!agent.assignments.some((a) => a.organizationId === row.organization_id)) return null;
   const listed = await listAgentContext(sql, agent, { client: row.organization_id, limit: 200 });
   const item = listed.ok ? listed.items.find((entry) => entry.id === id) : undefined;
-  return item ? { ...item, context_md: row.context_md ?? "" } : null;
+  if (!item) return null;
+  let task: FilingCard | null = null;
+  if (item.task_id) {
+    const card = await sql.get<{ id: string; title: string }>("SELECT id, title FROM tasks WHERE id = ? AND organization_id = ?", [item.task_id, row.organization_id]);
+    if (card) {
+      const brief = (await cardBriefs(sql, { organizationIds: [row.organization_id], taskIds: [card.id] })).get(card.id) ?? EMPTY_BRIEF;
+      task = { id: card.id, title: card.title, ...brief };
+    }
+  }
+  return { ...item, context_md: row.context_md ?? "", task };
 }
 
 // ---------- Unfiled inbox (staff) ----------

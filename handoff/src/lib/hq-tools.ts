@@ -1,3 +1,5 @@
+import { openSearchDb } from "@/db/open-search";
+import { loadAgentSearch, parseAgentRange } from "@/lib/search/agent-search";
 import { AgentWorkError, saveStaffBrief } from "@/db/agent-work";
 import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan";
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
@@ -87,6 +89,8 @@ type MailGate = {
 };
 
 type ToolOptions = {
+  /** The handoff-search database for search_console; undefined opens SEARCH_DB, null means not bound. */
+  searchSql?: Sql | null;
   wake?: (organizationId: string, reason: WakeReason) => Promise<unknown>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
@@ -123,6 +127,7 @@ const READS = new Set([
   "social_overview",
   "list_social_pieces",
   "get_social_cadence",
+  "search_console",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -424,6 +429,19 @@ async function perform(
       [organizationId],
     );
     return { ok: true, value: rows };
+  }
+  if (tool === "search_console") {
+    if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+    const range = parseAgentRange(text(input, "range"));
+    if (range === undefined) return { ok: false, error: "invalid" };
+    const loaded = await loadAgentSearch(sql, options.searchSql === undefined ? await openSearchDb() : options.searchSql, {
+      organizationId,
+      propertyId: text(input, "propertyId") || null,
+      range,
+      now,
+    });
+    if (!loaded.ok) return { ok: false, error: "missing" };
+    return { ok: true, value: loaded.result };
   }
   if (tool === "recent_activity") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
