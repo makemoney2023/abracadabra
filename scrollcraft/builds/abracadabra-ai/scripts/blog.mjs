@@ -11,14 +11,15 @@ import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
 import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { DIAGRAM, writeDiagrams } from "./blog-diagrams.mjs";
+import { ORG_ID as ENTITY_ORG_ID, SITE as ENTITY_SITE, orgNode } from "./entity.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-export const SITE = "https://abra-ca-dabra.app";
+export const SITE = ENTITY_SITE;
 export const CHECK = "https://check.abra-ca-dabra.app/check";
 /** House byline. Change it here and every byline, author box, meta author, and JSON-LD author follows. */
 export const AUTHOR = { name: "Abracadabra Studio", url: "https://abra-ca-dabra.app", id: `${SITE}/#studio` };
 export const AUTHOR_ID = AUTHOR.id;
-export const ORG_ID = `${SITE}/#org`;
+export const ORG_ID = ENTITY_ORG_ID;
 export const WEBSITE_ID = `${SITE}/#website`;
 
 const imageSchema = z.object({
@@ -423,17 +424,6 @@ function graphForPost(post, htmlPath) {
         })),
       },
     ],
-  };
-}
-
-function orgNode() {
-  return {
-    "@type": "Organization",
-    "@id": ORG_ID,
-    name: "Abracadabra AI",
-    url: `${SITE}/`,
-    email: "houdini@abra-ca-dabra.app",
-    slogan: "From thought to working software",
   };
 }
 

@@ -36,6 +36,7 @@ import { writeSchemaAssets } from "./schema-assets.mjs";
 import { glossarySitemapPaths, linkGlossaryMentions, renderGlossary } from "./glossary.mjs";
 import { publishedTerms, termPath } from "./glossary-data.mjs";
 import { assertReadinessCopy } from "./readiness-copy.mjs";
+import { homeOrgNode, orgNode } from "./entity.mjs";
 
 export const SF_CSS = "/assets/sf-case.css?v=20261023b";
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
@@ -79,16 +80,6 @@ function fill(text, start, end, inner) {
   return text.replace(pattern, `${start}\n${inner}\n${end}`);
 }
 
-function orgNode() {
-  return {
-    "@type": "Organization",
-    "@id": ORG_ID,
-    name: "Abracadabra AI",
-    url: `${SITE}/`,
-    email: "houdini@abra-ca-dabra.app",
-    slogan: "From thought to working software",
-  };
-}
 
 function websiteNode() {
   return {
@@ -1389,6 +1380,28 @@ async function renderMissing() {
   await writePage("404.html", html);
 }
 
+const ORG_NODE_PATTERN = /    \{\n      "@type": "Organization",\n      "@id": "https:\/\/abra-ca-dabra\.app\/#org"[\s\S]*?\n    \}(?=,?\n)/;
+
+/** Swap the hand-kept #org node in a static page for the shared entity node, so every page agrees. */
+export function replaceOrgNode(html, node, file, { website = null } = {}) {
+  if (!ORG_NODE_PATTERN.test(html)) throw new Error(`Missing Organization #org node in ${file}`);
+  const indent = (value) => JSON.stringify(value, null, 2).replace(/</g, "\\u003c").replace(/^/gm, "    ");
+  // A page that points at #website must also carry the WebSite node, or the reference dangles.
+  const needsWebsite = website && !/"@type": "WebSite",\n\s*"@id": "[^"]*#website"/.test(html);
+  const text = needsWebsite ? `${indent(node)},\n${indent(website)}` : indent(node);
+  return html.replace(ORG_NODE_PATTERN, () => text);
+}
+
+/** The live service pages, in menu order, for the homepage OfferCatalog. */
+function homeServices() {
+  return offerings.map((item) => {
+    const page = salesPages[item.slug];
+    if (!page) throw new Error(`Missing sales page for ${item.slug}`);
+    const url = `${SITE}/services/${item.slug}/`;
+    return { name: page.headline, url, id: `${url}#service` };
+  });
+}
+
 async function patchHome() {
   const path = join(root, "index.html");
   const proof = JSON.parse(await readFile(join(root, "content/proof.json"), "utf8"));
@@ -1399,6 +1412,7 @@ async function patchHome() {
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
   html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
   html = fill(html, "<!-- HQ-VIDEO -->", "<!-- /HQ-VIDEO -->", hqVideoSection());
+  html = replaceOrgNode(html, homeOrgNode(homeServices()), "index.html");
   const videoNode = JSON.stringify(hqVideoNode(SITE, ORG_ID), null, 2).replace(/^/gm, "    ");
   const nodePattern = /    \{\n      "@type": "VideoObject",\n      "@id": "[^"]*#video-hq-product"[\s\S]*?\n    \}(?=,\n)/;
   if (!nodePattern.test(html)) throw new Error("Missing HQ VideoObject node in index.html");
@@ -1426,9 +1440,17 @@ async function patchHome() {
 async function patchFilms() {
   const path = join(root, "films.html");
   let html = await readFile(path, "utf8");
+  html = replaceOrgNode(html, orgNode(), "films.html", { website: websiteNode() });
   html = fill(html, "<!-- SITE-NAV -->", "<!-- /SITE-NAV -->", siteHeader());
   html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter({ band: "compact" }));
   await writeFile(path, smartQuotesHtml(html));
+}
+
+async function patchWalkthrough() {
+  const path = join(root, "walkthrough.html");
+  const html = await readFile(path, "utf8");
+  const next = replaceOrgNode(html, orgNode(), "walkthrough.html", { website: websiteNode() });
+  if (next !== html) await writeFile(path, next);
 }
 
 async function patchSitemap() {
@@ -1479,6 +1501,7 @@ export async function buildSitePages() {
   await renderMissing();
   await patchHome();
   await patchFilms();
+  await patchWalkthrough();
   await renderGlossary({ SITE, ORG_ID, WEBSITE_ID, root, shell, writePage, orgNode, websiteNode, pageNode, esc, visibleCrumbs });
   await linkGlossaryMentions(root);
   await patchSitemap();
