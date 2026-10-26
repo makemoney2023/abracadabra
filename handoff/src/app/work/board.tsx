@@ -249,7 +249,7 @@ function ReviewPanel({ card, now, override }: { card: WorkBoardCard; now: number
         <details className="text-xs">
           <summary className="text-muted-foreground">Admin override</summary>
           <div className="mt-1.5 flex flex-col gap-1.5">
-            <p className="text-muted-foreground">Client Services approves Review cards. Use this only to step in for it.</p>
+            <p className="text-muted-foreground">Client Services approves Review cards (scrum-master can also approve them on its four listed clients, not its own work). Use this only to step in.</p>
             <Input
               value={note}
               maxLength={2000}

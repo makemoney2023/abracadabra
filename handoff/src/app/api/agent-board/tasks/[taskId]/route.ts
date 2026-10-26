@@ -22,7 +22,8 @@ export const dynamic = "force-dynamic";
  * The board has four columns: To do, Doing, Waiting on Client Services (review), Done. The old stage names are
  * aliases: describe is todo; engineer, build, and run are doing. A move to doing stores stage build and, with
  * AGENT_MODE=agents, hands the task to its agent assignee (else the lead agent); it is refused while AGENT_MODE is legacy (it would start a
- * swarm or Cursor run). A card waiting on Client Services can't be started, paused, or moved. No deletes.
+ * swarm or Cursor run). A card waiting on Client Services can't be started, paused, or moved. Client Services approves
+ * it or sends it back; scrum-master may also approve it (below) on its four listed clients, never its own work. No deletes.
  * Skill packs (library prefixes) attach to any open card of a client this agent is on, review included: 403 for
  * another client's card, 404 for a missing card or an unknown pack, 409 for a done card.
  */

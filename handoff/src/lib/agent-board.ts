@@ -293,7 +293,7 @@ async function applyAgentTaskChange(
   // Review waits on Client Services. The agent can note or block it, but not take it out or finish it itself.
   const inReviewNow = boardColumnOf(task) === "review";
   if (inReviewNow && (change.action === "start" || change.action === "pause" || change.action === "move")) {
-    return { ok: false, status: 403, message: "That task is waiting on Client Services review. Client Services approves it or sends it back." };
+    return { ok: false, status: 403, message: "That task is waiting on Client Services review. Client Services approves it or sends it back (scrum-master may also approve it on its listed clients, not its own work)." };
   }
   if (change.action === "note") {
     activityId = await record(sql, agent, row, "note", `Note on "${task.title}": ${change.body}`, { body: change.body }, input.now);
