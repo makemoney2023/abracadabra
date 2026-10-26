@@ -61,7 +61,7 @@ export default async function WorkPage({
 
   return (
     <StaffShell>
-      <PageFrame title="Work" description="Cards for every client: To do, Doing, Waiting on Client Services, and Done. Client Services approves a card or sends it back.">
+      <PageFrame title="Work" description="Cards for every client: To do, Doing, Waiting on Client Services, and Done. Client Services approves a card or sends it back; scrum-master can also approve one to Done on its four listed clients, but not its own work.">
         <ClientRequests rows={pending} />
         <WorkToolbar late={late} week={week} blocked={blocked} review={review} client={client || undefined} project={project || undefined} agent={agent || undefined} counts={counts} />
         <div className="flex flex-wrap gap-2">

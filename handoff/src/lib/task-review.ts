@@ -5,6 +5,8 @@ import { moveTaskStage, type MoveTaskInput, type MoveTaskResult } from "@/lib/ta
 import { columnOf } from "@/lib/board-model";
 import { nextColumnPosition } from "@/lib/task-position";
 import { releaseHeldWork, type ReleaseResult } from "@/lib/agent-filing-review";
+import type { AgentPrincipal } from "@/lib/agent-work-filing";
+import { canApproveReviews } from "@/lib/review-approvers";
 
 type ReviewRow = {
   id: string;
@@ -23,11 +25,22 @@ export type ReviewInput = Omit<MoveTaskInput, "to" | "direction" | "position" | 
   decision: ReviewDecision;
   /** Required to send back; optional on approve. */
   note?: string;
+  /** Agent approvals only (agentApproveReview): the agent's label for the timeline. */
+  agentLabel?: string;
 };
 
 export type ReviewResult =
   | (MoveTaskResult & { release?: ReleaseResult })
   | { ok: false; error: "not_in_review" | "note_required" };
+
+/** An agent approval adds two refusals: not permitted on that client, or its own work. */
+export type AgentReviewResult = ReviewResult | { ok: false; error: "not_permitted" | "own_work" };
+
+/** Activity kind of an approval by a permitted agent (src/lib/review-approvers.ts), actor_kind agent, actor_id its id. */
+export const AGENT_REVIEW_KIND = "client_agent.task_review";
+
+/** Every activity kind that records a review decision (Client Services, staff override, permitted agent). */
+export const REVIEW_DECISION_KINDS = ["client_services.task_review", "staff.task_review", AGENT_REVIEW_KIND] as const;
 
 async function loadReview(sql: Sql, taskId: string): Promise<ReviewRow | undefined> {
   return sql.get<ReviewRow>(
@@ -45,7 +58,8 @@ async function logReview(
   input: ReviewInput,
 ): Promise<void> {
   if (!task.organization_id || !input.actor.id) return;
-  const who = input.actor.kind === "system" ? "Client Services" : "Admin override";
+  const agentLabel = input.actor.kind === "agent" ? (input.agentLabel ?? input.actor.id) : null;
+  const who = input.actor.kind === "system" ? "Client Services" : agentLabel ? `${agentLabel} (agent ${input.actor.id})` : "Admin override";
   const what = `${who}: ${
     decision === "approve" ? "review approved" : decision === "build" ? "sent back to build" : "sent back to in progress"
   }`;
@@ -57,13 +71,62 @@ async function logReview(
       crypto.randomUUID(),
       task.organization_id,
       task.project_id,
-      input.actor.kind === "system" ? "client_services.task_review" : "staff.task_review",
+      input.actor.kind === "system" ? "client_services.task_review" : input.actor.kind === "agent" ? AGENT_REVIEW_KIND : "staff.task_review",
       input.actor.kind,
       input.actor.id,
       `${what}: "${task.title}".${note ? ` ${note}` : ""}`.slice(0, 2000),
-      JSON.stringify({ taskId: task.id, decision, note, stage: task.stage }),
+      JSON.stringify({ taskId: task.id, decision, note, stage: task.stage, ...(input.actor.kind === "agent" ? { agent_id: input.actor.id } : {}) }),
       input.now,
     ],
+  );
+}
+
+/** Approve: to done, then release the card's held filings. Callers check who may approve and that it is in Review. */
+async function approveInReview(sql: Sql, task: ReviewRow, input: ReviewInput, note: string | null): Promise<ReviewResult> {
+  const moved = await moveTaskStage(sql, { ...input, to: "done" });
+  if (!moved.ok) return moved;
+  await sql.run("UPDATE tasks SET review_note = NULL WHERE id = ?", [task.id]);
+  await logReview(sql, task, "approve", note, input);
+  // Held agent filings on this card go to the client now; send back (below) keeps them held.
+  const releaseActor = input.actor.kind === "staff" ? "staff" : input.actor.kind === "agent" ? "agent" : "system";
+  const release = await releaseHeldWork(sql, { taskId: task.id, now: input.now, actor: { kind: releaseActor, id: input.actor.id } });
+  return release.released.length ? { ...moved, release } : moved;
+}
+
+/**
+ * A permitted agent (src/lib/review-approvers.ts) approves one card from Waiting on Client Services to Done with its
+ * own token. Approve only: there is no agent send back. Refused (nothing written) when the agent is not permitted on the
+ * card's client (not_permitted), the card is not in Review (not_in_review), or it is the agent's own work: the card's
+ * assignee, the one who asked for the review, or the author of work filed on it (own_work). Logged as
+ * client_agent.task_review with actor_kind agent and actor_id the agent, which the Client Services feed carries.
+ */
+export async function agentApproveReview(
+  sql: Sql,
+  agent: AgentPrincipal,
+  input: { taskId: string; note?: string; now: number },
+): Promise<AgentReviewResult> {
+  const task = await loadReview(sql, input.taskId);
+  if (!task) return { ok: false, error: "missing" };
+  if (!canApproveReviews(agent, task.organization_id)) return { ok: false, error: "not_permitted" };
+  if (task.status === "done" || task.review_requested_at == null) return { ok: false, error: "not_in_review" };
+  const owner = await sql.get<{ assignee_agent_id: string | null }>("SELECT assignee_agent_id FROM tasks WHERE id = ?", [task.id]);
+  const filed = await sql.get<{ id: string }>(
+    "SELECT id FROM agent_work_items WHERE task_id = ? AND agent_id = ? AND state = 'filed' AND retracted_at IS NULL LIMIT 1",
+    [task.id, agent.agentId],
+  );
+  const asked = await sql.get<{ actor_id: string | null }>(
+    `SELECT actor_id FROM activities
+     WHERE organization_id = ? AND kind = 'agent.task_stage' AND json_extract(data_json, '$.taskId') = ? AND json_extract(data_json, '$.stage') = 'review'
+     ORDER BY created_at DESC, rowid DESC LIMIT 1`,
+    [task.organization_id, task.id],
+  );
+  if (owner?.assignee_agent_id === agent.agentId || filed || asked?.actor_id === agent.agentId) return { ok: false, error: "own_work" };
+  const note = input.note?.trim().slice(0, 2000) || null;
+  return approveInReview(
+    sql,
+    task,
+    { taskId: task.id, decision: "approve", note: note ?? undefined, now: input.now, actor: { kind: "agent", id: agent.agentId }, agentLabel: agent.label },
+    note,
   );
 }
 
@@ -85,15 +148,7 @@ export async function decideReview(sql: Sql, input: ReviewInput): Promise<Review
   const note = input.note?.trim().slice(0, 2000) || null;
   if (input.decision !== "approve" && !note) return { ok: false, error: "note_required" };
 
-  if (input.decision === "approve") {
-    const moved = await moveTaskStage(sql, { ...input, to: "done" });
-    if (!moved.ok) return moved;
-    await sql.run("UPDATE tasks SET review_note = NULL WHERE id = ?", [task.id]);
-    await logReview(sql, task, "approve", note, input);
-    // Held agent filings on this card go to the client now; send back (below) keeps them held.
-    const release = await releaseHeldWork(sql, { taskId: task.id, now: input.now, actor: { kind: input.actor.kind === "staff" ? "staff" : "system", id: input.actor.id } });
-    return release.released.length ? { ...moved, release } : moved;
-  }
+  if (input.decision === "approve") return approveInReview(sql, task, input, note);
 
   if (input.decision === "build") {
     const moved = await moveTaskStage(sql, { ...input, to: "build", instruction: note ?? undefined });

@@ -506,6 +506,7 @@ const UPDATE_KINDS = [
   "staff.task_stage",
   "staff.task_review",
   "client_services.task_review",
+  "client_agent.task_review",
   "client_agent.review_waiting",
   "deliverable_published",
   "agent.published",
