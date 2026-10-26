@@ -10,6 +10,8 @@ import { recordCardFailure } from "@/lib/card-automove";
 import { BOARD_COLUMN_LABEL, columnOf as boardColumnOf, toColumn, type BoardColumn } from "@/lib/board-model";
 import type { SkillBucket } from "@/lib/skill-library";
 import { attachCardSkills, cardSkillPacks, checkPrefixes, detachCardSkills, loadCatalog } from "@/lib/skill-packs";
+import { briefData, cardBriefs, EMPTY_BRIEF, parseBrief, type BriefInput, type CardBrief } from "@/lib/card-brief";
+import { agentApproveReview } from "@/lib/task-review";
 
 /**
  * Client agents update the project board for clients they are assigned to now: set a task in progress, block it with
@@ -39,7 +41,7 @@ export type BoardTask = {
   /** The agent that owns the card (lead or hire). null: the client's lead agent. */
   assignee_agent_id: string | null;
   updated_at: string;
-};
+} & CardBrief;
 
 export type BoardError = { ok: false; status: 400 | 403 | 404 | 409 | 503; message: string };
 
@@ -52,9 +54,10 @@ type TaskDbRow = {
 const TASK_FIELDS =
   "id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, review_requested_at, review_note, assignee_agent_id, updated_at";
 
-function toBoardTask(row: TaskDbRow, skillPacks: string[] = []): BoardTask {
+function toBoardTask(row: TaskDbRow, skillPacks: string[] = [], brief: CardBrief = EMPTY_BRIEF): BoardTask {
   return {
     ...row,
+    ...brief,
     skill_packs: skillPacks,
     column: boardColumnOf(row),
     review_requested_at: row.review_requested_at == null || row.status === "done" ? null : new Date(row.review_requested_at).toISOString(),
@@ -139,9 +142,10 @@ export async function listAgentBoard(
     );
     for (const row of attached) packs.set(row.task_id, [...(packs.get(row.task_id) ?? []), row.prefix]);
   }
+  const briefs = await cardBriefs(sql, { organizationIds: orgs, taskIds: rows.map((row) => row.id) });
   return {
     ok: true,
-    tasks: rows.map((row) => toBoardTask(row, packs.get(row.id) ?? [])),
+    tasks: rows.map((row) => toBoardTask(row, packs.get(row.id) ?? [], briefs.get(row.id))),
   };
 }
 
@@ -156,7 +160,11 @@ export type BoardAction =
   /** Skill pack prefixes from GET /api/agent-skill-library, e.g. "community/marketingskills/" or one ".../SKILL.md". */
   | { action: "attach_skills" | "detach_skills"; prefixes: string[] }
   /** Lead only. to: an agent id on the card's client, or null for the lead (default). */
-  | { action: "assign"; to: string | null };
+  | { action: "assign"; to: string | null }
+  /** Waiting on Client Services to Done. Only agents listed in src/lib/review-approvers.ts, on their listed clients. */
+  | { action: "approve"; note?: string }
+  /** Set the card's description, requirements and acceptance criteria. Fields not sent keep their value. */
+  | { action: "describe"; brief: BriefInput };
 
 export function parseBoardAction(raw: unknown): BoardAction | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -187,6 +195,12 @@ export function parseBoardAction(raw: unknown): BoardAction | null {
       const to = str(body.to, 64)?.toLowerCase();
       if (!to) return null;
       return { action: "assign", to: to === "lead" ? null : to };
+    }
+    case "approve":
+      return { action: "approve", note: str(body.note, 2000) ?? undefined };
+    case "describe": {
+      const parsed = parseBrief(body);
+      return parsed.ok && parsed.brief ? { action: "describe", brief: parsed.brief } : null;
     }
     case "attach_skills":
     case "detach_skills": {
@@ -255,6 +269,23 @@ async function applyAgentTaskChange(
     return { ok: true, task: await freshTask(sql, task.id), activityId: done.activityId, ...(done.handedTo !== undefined ? { handedTo: done.handedTo } : {}) };
   }
   const row = { id: task.id, title: task.title, organization_id: task.organization_id, project_id: task.project_id };
+  if (change.action === "approve") return approveAsAgent(sql, agent, row, change.note, input.now);
+  if (change.action === "describe") {
+    if (task.status === "done") return { ok: false, status: 409, message: "That task is done. Describe open cards only." };
+    const owner = await sql.get<{ assignee_agent_id: string | null }>("SELECT assignee_agent_id FROM tasks WHERE id = ?", [task.id]);
+    if (owner?.assignee_agent_id !== agent.agentId && !isLeadOn(agent, task.organization_id)) {
+      return { ok: false, status: 403, message: "Only the card's owner or the client's lead agent describes it. Add a note instead." };
+    }
+    const current = (await cardBriefs(sql, { organizationIds: [task.organization_id], taskIds: [task.id] })).get(task.id) ?? EMPTY_BRIEF;
+    const merged: BriefInput = {
+      description: change.brief.description !== undefined && change.brief.description !== null ? change.brief.description : current.description,
+      requirements: change.brief.requirements?.length ? change.brief.requirements : current.requirements,
+      acceptanceCriteria: change.brief.acceptanceCriteria?.length ? change.brief.acceptanceCriteria : current.acceptance_criteria,
+    };
+    const activityId = await record(sql, agent, row, "describe", `Updated the description of "${task.title}".`, briefData(merged), input.now);
+    await sql.run("UPDATE tasks SET updated_at = ? WHERE id = ?", [input.now, task.id]);
+    return { ok: true, task: await freshTask(sql, task.id), activityId };
+  }
   const actor = { kind: "agent" as const, id: agent.agentId };
   let activityId = "";
   let handedTo: string | null | undefined;
@@ -379,7 +410,106 @@ export async function assignTaskAgent(
 
 async function freshTask(sql: Sql, taskId: string): Promise<BoardTask> {
   const fresh = await sql.get<TaskDbRow>(`SELECT ${TASK_FIELDS} FROM tasks WHERE id = ?`, [taskId]);
-  return toBoardTask(fresh!, await cardSkillPacks(sql, taskId));
+  const briefs = await cardBriefs(sql, { organizationIds: [fresh!.organization_id], taskIds: [taskId] });
+  return toBoardTask(fresh!, await cardSkillPacks(sql, taskId), briefs.get(taskId));
+}
+
+const APPROVE_ERRORS: Record<string, { status: 403 | 404 | 409 | 400; message: string }> = {
+  missing: { status: 404, message: "No such task." },
+  not_permitted: { status: 403, message: "This agent can't approve cards on this client. Client Services approves them." },
+  not_in_review: { status: 409, message: "That task is not waiting on Client Services review." },
+  own_work: { status: 403, message: "An agent never approves its own work: this card is assigned to you, you asked for its review, or you filed work on it. Client Services approves it." },
+};
+
+/** approve: a permitted agent moves a card from Waiting on Client Services to Done (src/lib/task-review.ts agentApproveReview). */
+async function approveAsAgent(
+  sql: Sql,
+  agent: AgentPrincipal,
+  row: { id: string; title: string; organization_id: string; project_id: string | null },
+  note: string | undefined,
+  now: number,
+): Promise<UpdateResult> {
+  const decided = await agentApproveReview(sql, agent, { taskId: row.id, note, now });
+  if (!decided.ok) {
+    const known = APPROVE_ERRORS[decided.error] ?? { status: 400 as const, message: `That approval was refused (${decided.error}).` };
+    return { ok: false, status: known.status, message: known.message };
+  }
+  const released = "release" in decided && decided.release ? decided.release.released.length : 0;
+  const activityId = await record(
+    sql, agent, row, "approve", `Approved "${row.title}" to Done.${note ? ` ${note}` : ""}`, { to: "done", note: note ?? null, released }, now,
+  );
+  return { ok: true, task: await freshTask(sql, row.id), activityId };
+}
+
+export type AgentCardFiling = {
+  id: string; agent_id: string; kind: string; title: string; filed_at: string | null; skills_used: string[];
+  visibility: "held" | "released" | "superseded" | "withdrawn" | "published";
+};
+
+export type AgentCardDetail = BoardTask & {
+  /** Notes on the card's timeline (board notes and refusals), newest first, up to 50. */
+  notes: { at: string; actor_kind: string; actor_id: string | null; kind: string; body: string }[];
+  /** Work filed against the card, newest first, up to 50, with the skills each filing cited. */
+  filings: AgentCardFiling[];
+};
+
+function jsonList(raw: string | null): string[] {
+  try {
+    const value = raw ? JSON.parse(raw) : [];
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** One card with its brief, notes and filings. Only for a card of a client this agent is assigned to now (else 404). */
+export async function getAgentTask(sql: Sql, agent: AgentPrincipal, taskId: string): Promise<{ ok: true; task: AgentCardDetail } | BoardError> {
+  const found = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM tasks WHERE id = ?", [taskId]);
+  if (!found || !found.organization_id || !assigned(agent, found.organization_id)) return { ok: false, status: 404, message: "No such task on your clients' boards." };
+  const task = await freshTask(sql, taskId);
+  const notes = await sql.all<{ created_at: number; actor_kind: string; actor_id: string | null; kind: string; body: string | null }>(
+    `SELECT created_at, actor_kind, actor_id, kind, body FROM activities
+     WHERE organization_id = ? AND kind IN ('client_agent.board', 'client_agent.board_refused', 'github.card_note')
+       AND (json_extract(data_json, '$.task_id') = ? OR json_extract(data_json, '$.taskId') = ?)
+       AND (kind != 'client_agent.board' OR json_extract(data_json, '$.action') = 'note')
+     ORDER BY created_at DESC, rowid DESC LIMIT 50`,
+    [found.organization_id, taskId, taskId],
+  );
+  const filings = await sql.all<{
+    id: string; agent_id: string; kind: string; title: string; filed_at: number | null; skills_used_json: string | null;
+    held_at: number | null; released_at: number | null; retracted_at: number | null; superseded_by: string | null;
+  }>(
+    `SELECT i.id, i.agent_id, i.kind, i.title, i.filed_at, i.skills_used_json, b.held_at, i.released_at, i.retracted_at, i.superseded_by
+     FROM agent_work_items i LEFT JOIN batches b ON b.id = i.batch_id
+     WHERE i.task_id = ? AND i.organization_id = ? AND i.state = 'filed' ORDER BY i.filed_at DESC LIMIT 50`,
+    [taskId, found.organization_id],
+  );
+  return {
+    ok: true,
+    task: {
+      ...task,
+      notes: notes.map((note) => ({
+        at: new Date(note.created_at).toISOString(), actor_kind: note.actor_kind, actor_id: note.actor_id, kind: note.kind, body: note.body ?? "",
+      })),
+      filings: filings.map((item) => ({
+        id: item.id,
+        agent_id: item.agent_id,
+        kind: item.kind,
+        title: item.title,
+        filed_at: item.filed_at == null ? null : new Date(item.filed_at).toISOString(),
+        skills_used: jsonList(item.skills_used_json),
+        visibility: item.retracted_at != null
+          ? "withdrawn"
+          : item.superseded_by
+            ? "superseded"
+            : item.released_at != null
+              ? "released"
+              : item.held_at != null
+                ? "held"
+                : "published",
+      })),
+    },
+  };
 }
 
 /**
@@ -441,6 +571,8 @@ export async function createAgentTask(
     /** The Client Services request this card answers (POST /api/client-services/requests), or its email thread id. */
     workRequestId?: string | null;
     threadId?: string | null;
+    /** Description, requirements and acceptance criteria (stored on the create activity; GET returns them). */
+    brief?: BriefInput;
     now: number;
   },
 ): Promise<{ ok: true; task: BoardTask; activityId: string; workRequestId?: string | null } | BoardError> {
@@ -516,13 +648,14 @@ export async function createAgentTask(
     : null;
   const activityId = await record(
     sql, agent, row, "create", `Added task "${title}".${owner}${note ? ` ${note}` : ""}`,
-    { stage, note, assignee, ...(linked ? { work_request_id: linked } : {}) }, input.now,
+    { stage, note, assignee, ...(linked ? { work_request_id: linked } : {}), ...(input.brief ? briefData(input.brief) : {}) }, input.now,
   );
+  const brief = (await cardBriefs(sql, { organizationIds: [organizationId], taskIds: [id] })).get(id) ?? EMPTY_BRIEF;
   return {
     ok: true,
     task: {
       ...row, stage, status: "todo", column: asked, blocked_reason: null, deliverable_id: null, review_requested_at: null, review_note: null,
-      skill_packs: [], assignee_agent_id: assignee, updated_at: new Date(input.now).toISOString(),
+      skill_packs: [], assignee_agent_id: assignee, updated_at: new Date(input.now).toISOString(), ...brief,
     },
     activityId,
     ...(linked ? { workRequestId: linked } : {}),
