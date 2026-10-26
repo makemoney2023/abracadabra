@@ -9,7 +9,6 @@ import {
   MODIFIED,
   OFFERINGS_HEADING,
   OFFERINGS_KICKER,
-  PLACEHOLDER,
   businessFunctions,
   LISTED_CASE_SLUGS,
   SHOW_HOME_WORK,
@@ -115,7 +114,7 @@ function visibleCrumbs(items) {
 }
 
 function placeholder(text) {
-  return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#start">Start a project</a></p></aside>`;
+  return `<aside class="note"><p>${esc(text)}</p><p><a href="/#start">Start a project</a></p></aside>`;
 }
 
 function underTheHood() {
@@ -279,7 +278,6 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">

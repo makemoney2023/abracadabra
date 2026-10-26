@@ -128,7 +128,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   }
 });
 
-test("generated pages keep placeholders visible and out of JSON-LD", () => {
+test("generated pages keep owner notes visible and placeholders out of HTML and JSON-LD", () => {
   const pages = [
     ["services/index.html", ["CollectionPage", "ItemList"]],
     ["services/ai-assistants-and-agents/index.html", ["Service", "FAQPage", "BreadcrumbList"]],
@@ -151,7 +151,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(html, /Start a project/);
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
-  assert.match(offering, /PLACEHOLDER — needs owner sign-off/);
+  assert.doesNotMatch(offering, /PLACEHOLDER/);
   assert.match(offering, /class="btn btn--primary sales-primary" href="\/start\/">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
@@ -182,9 +182,11 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.equal(offering.includes("$"), false);
   assert.match(offering, /href="\/services\/">Services/);
   const product = read("products/schema/index.html");
-  assert.match(product, /PLACEHOLDER — needs owner sign-off/);
+  assert.doesNotMatch(product, /PLACEHOLDER/);
+  assert.match(product, /<aside class="note"><p>Pricing on request/);
   const course = read("course/llm-leverage/index.html");
-  assert.match(course, /PLACEHOLDER — needs owner sign-off/);
+  assert.doesNotMatch(course, /PLACEHOLDER/);
+  assert.match(course, /<aside class="note"><p>Open the course to see every module/);
   assert.equal(course.includes("module 1"), false);
   const sitemap = read("sitemap.xml");
   const hub = read("services/index.html");
@@ -196,7 +198,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(read("index.html"), /\/blog\/media\/services\/ai-assistants-and-agents\/hero-960\.webp 960w/);
   assert.match(read("about/index.html"), /class="page-hero"/);
   assert.equal(/christopher|buzny|founder/i.test(read("about/index.html")), false);
-  assert.match(hub, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
+  assert.doesNotMatch(hub, /PLACEHOLDER/);
   for (const slug of offerings) {
     assert.match(sitemap, new RegExp(`https://abra-ca-dabra.app/services/${slug}/`));
     const page = read(`services/${slug}/index.html`);
@@ -214,7 +216,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(page, /<div class="faq-list"><details>/);
     assert.equal((page.match(/<details>/g) || []).length >= 4, true, slug);
     assert.equal(page.includes('href="/#start"'), false, slug);
-    assert.match(page, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
+    assert.doesNotMatch(page, /PLACEHOLDER/, slug);
     assert.doesNotMatch(page, industryNoun);
     assert.equal(/\$\d/.test(page), false, slug);
     assert.equal((page.match(/<h3>/g) || []).length >= 4, true, slug);
